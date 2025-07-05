@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор учебных планов</title>
+    <style>
+        /* Общие настройки */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+/* Дополнительное оформление полей ввода */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        /* Основная сетка */
+        .container {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Сайдбар слева */
+        .sidebar {
+            width: 50%;
+            padding: 20px;
+            background-color: #f2f7d7;
+            border-right: 5px solid #ccc;
+        }
+
+        /* Правая часть страницы (лист А4) */
+        .page-container {
+            width: 70%;
+            height: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Листы формата А4 */
+        .page-a4 {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            outline: 4px solid #ccc;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+
+       
+
+			table {
+			width: 100%;
+							}
+
+			th, td {
+			border: 1px solid #ddd;
+			padding: 8px;
+ 			 text-align: left;
+ 			 word-wrap: break-word;
+ 			
+			}
+
+	
+			th:nth-child(2), td:nth-child(2) {
+ 			 max-width: 60px; /* ширина */
+ 			 overflow: hidden;
+
+			}
+			th:nth-child(3), td:nth-child(3) {
+ 			 max-width: 60px; /* ширина */
+ 			 overflow: hidden;
+
+			}
+			th:nth-child(4), td:nth-child(4) {
+ 			 max-width: 60px; /* ширина */
+ 			 overflow: hidden;
+
+			}
+
+        /* Оформление полей ввода */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Форматирование кнопок */
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Фиксированные кнопки внизу страницы */
+        .bottom-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        /* Заголовок блока */
+        .header-block {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf1cb;
+            color: black;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            border: 3px solid #ccc;
+        }
+
+        /* Режим печати листов формата А4 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body, html {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container, .sidebar, .bottom-right {
+                display: none !important;
+            }
+
+            .page-container {
+                width: 100%;
+                height: 100%;
+            }
+
+            .page-a4 {
+                outline: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header-block">
+                <h3>Панель редактирования</h3>
+            </div>
+
+            <!-- Верхние заголовки -->
+            <h2>Рабочая программа образовательного модуля «... »</h2>
+            <h3>Учебно-тематический план образовательного модуля «... »</h3>
+            
+            <!-- Таблица для ввода данных -->
+            <table id="topics-table">
+                <thead>
+                    <tr>
+                        <th>Тема</th>
+                        <th>Количество часов лекции</th>
+                        <th>Количество практических занятий</th>
+                        <th>Дистанционное обучение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Изначально показываем одну строку -->
+                    <tr>
+                        <td><input type="text"/></td>
+                        <td><input type="number"/></td>
+                        <td><input type="number"/></td>
+                        <td><input type="number"/></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Кнопка для добавления темы -->
+            <button id="add-topic-btn">Добавить тему</button>
+
+            <h3>Содержание образовательного модуля «... »</h3>
+            <h4>Содержание лекционных занятий образовательного модуля «... »</h4>
+            <h4>Содержание практических занятий образовательного модуля «... » </h4>
+            <h4>Содержание самостоятельной работы в режиме дистанционного обучения образовательного модуля «... » </h4>
+            
+
+            <!-- Новый чекбокс -->
+            <label for="network-form-checkbox">
+                <input type="checkbox" id="network-form-checkbox"/>
+                Сетевая форма реализации программы
+            </label>
+
+            <!-- Скрытая таблица по умолчанию -->
+            <table id="network-table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Наименование организации</th>
+                        <th>Участие в реализации структурного компонента / образовательного модуля</th>
+                        <th>Форма участия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                        <td><input type="text"/></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Кнопка публикации -->
+            <button id="publish-button">Сохранить</button>
+        </div>
+        
+        <div class="page-container">
+            <div class="page-a4">
+                <!-- Лист формата А4 для предпросмотра результата -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Фиксированная кнопка "Назад" -->
+    <div class="bottom-left">
+        <button id="back-button" onclick="history.back()">Назад</button>
+    </div>
+
+    <!-- Фиксированная кнопка "Дальше" -->
+    <div class="bottom-right">
+        <button id="next-button" onclick="goToKonstruktor8Page()">Дальше</button>
+    </div>
+
+    <script>
+        // Показываем таблицу при установке галочки
+        const checkbox = document.getElementById("network-form-checkbox");
+        const networkTable = document.getElementById("network-table");
+
+        checkbox.addEventListener("change", () => {
+            if(checkbox.checked){
+                networkTable.style.display = "block";
+            } else {
+                networkTable.style.display = "none";
+            }
+        });
+
+        // Функция для добавления новой строки таблицы при нажатии на кнопку
+        document.getElementById('add-topic-btn').onclick = function() {
+            var tbody = document.querySelector('#topics-table tbody');
+            var row = tbody.insertRow();
+
+            // Ячейки с полями ввода
+            row.insertCell().innerHTML = '<input type="text"/>';       // Название темы
+            row.insertCell().innerHTML = '<input type="number"/>';    // Количество часов лекции
+            row.insertCell().innerHTML = '<input type="number"/>';    // Количество практических занятий
+            row.insertCell().innerHTML = '<input type="number"/>';    // Дистанционное обучение
+        };
+
+        // Функционал перехода дальше
+        function goToKonstruktor8Page() {
+            window.location.href = "{{ url_for('konstruktor8_page') }}";
+        }
+    </script>
+</body>
+</html>

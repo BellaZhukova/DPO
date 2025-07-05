@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <style>
+         body {
+            font-family: 'Roboto', sans-serif; /* Устанавливает шрифт для всего документа */
+            display: flex; /* Использует Flexbox для центрирования содержимого */
+            justify-content: center; /* Горизонтальное центрирование */
+            align-items: center; /* Вертикальное центрирование */
+            min-height: 100vh; /* Минимальная высота равна высоте окна браузера */
+            margin: 0; /* Убирает внешние отступы */
+            background-color: #cce0ff; /* Устанавливает светло-серый фон */
+        }
+
+        /* Стилизация окна */
+        .window {
+            width: 400px; /* Ширина окна */
+            height: 600px; /* Высота окна */
+            background-color: #fff; /* Белый фон окна */
+            border: 4px solid #ccc; /* Серый контур */
+            border-radius: 10px; /* Закругленные углы */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Тень */
+            padding: 20px; /* Внутренние отступы */
+        }
+
+        /* Стилизация основного контейнера */
+        .wrapper {
+        text-align: center; /* Выравнивание текста по центру */
+            max-width: 300px; /* Максимально допустимая ширина */
+            margin: 0 auto; /* Центровка контейнера по горизонтали */
+            padding: 20px; /* Внутренние отступы вокруг содержимого */
+        }
+
+        .wrapper2 {
+        text-align: center; /* Выравнивание текста по центру */
+            max-width: 500px; /* Максимально допустимая ширина */
+            margin: 0 auto; /* Центровка контейнера по горизонтали */
+            padding: 20px; /* Внутренние отступы вокруг содержимого */
+        }
+
+        .window2 {
+            width: 750px; /* Ширина окна */
+            height: 100%; /* Высота окна */
+            background-color: #fff; /* Белый фон окна */
+            border: 4px solid #ccc; /* Серый контур */
+            border-radius: 10px; /* Закругленные углы */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Тень */
+            padding: 20px; /* Внутренние отступы */
+            text-align: center; /* Выравнивание текста по центру */
+        }
+
+        /* Заголовок */
+        h1 {
+            color: #333; /* Темно-серый цвет текста */
+            font-size: 1.5em; /* Размер шрифта */
+            margin-bottom: 20px; /* Отступ снизу */
+            line-height: 1.2; /* Межстрочный интервал */
+            text-align: center;
+            margin-top: 10px; /* Добавляем отступ сверху */
+        }
+
+        /* Основной текст */
+        p {
+            line-height: 1.5; /* Межстрочный интервал */
+            color: #666; /* Светло-серый цвет текста */
+            margin-bottom: 30px; /* Отступ снизу */
+        }
+
+
+        /* Контейнер полей ввода */
+        .input-container {
+            display: flex;
+            flex-direction: column; /* Теперь направления столбец, метка над полем */
+            width: 100%; /* Весь контейнер на всю ширину */
+            margin-bottom: 10px;
+        }
+
+        /* Метка поверх поля */
+        .input-container label {
+            display: block;
+            margin-bottom: 5px; /* Пространство между меткой и полем */
+            margin-right: auto;
+        }
+
+        /* Поля ввода */
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="tel"] {
+            padding: 10px; /* Внутренние отступы */
+            border: 2px solid #ccc; /* Серый контур */
+            border-radius: 5px; /* Закругленные углы */
+            outline: none; /* Убирает контур при фокусе */
+            transition: all 0.3s ease-in-out; /* Плавный переход */
+            width: 100%; /* Поле ввода на всю ширину контейнера */
+            box-sizing: border-box; /* Учитываем внутренние отступы в ширине */
+        }
+
+        /* Кнопка входа */
+        button {
+            padding: 10px 20px; /* Внутренние отступы */
+            background-color: #007BFF; /* Синий фон */
+            color: white; /* Белый цвет текста */
+            border: none; /* Убирает границу */
+            cursor: pointer; /* Курсор в виде указателя */
+            border-radius: 5px; /* Закругленные углы */
+            transition: transform 0.3s ease-in-out; /* Плавный переход */
+            width: 100%; /* Кнопка на всю ширину контейнера */
+            margin-top: 20px; /* Отступ сверху */
+        }
+
+        button:hover {
+            transform: scale(1.05); /* Немного увеличиваем размер кнопки при наведении */
+        }
+
+        #become-author {
+            font-size: 16px; /* Исходный размер шрифта */
+            text-decoration: underline; /* Подчёркивание текста */
+            transition: font-size 0.3s ease-in-out; /* Анимация изменения размера */
+        }
+
+        #become-author:hover {
+            font-size: 18px; /* Размер шрифта увеличивается при наведении */
+        }
+
+        /* Нижний блок с ссылкой "Стать автором" */
+        footer a {
+            display: block; /* Делает ссылку блочным элементом */
+            margin-top: 20px; /* Отступ сверху */
+            color: #007BFF; /* Синий цвет текста */
+            text-decoration: underline; /* Подчеркивание */
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed; /* Фиксированное положение */
+            z-index: 1; /* Задает уровень наложения */
+            left: 0; /* Левое положение */
+            top: 0px; /* Верхнее положение */
+            width: 100%; /* Ширина окна */
+            height: 100%; /* Высота окна */
+            overflow: auto; /* Добавляет прокрутку при необходимости */
+            background-color: rgba(0,0,0,0.4); /* Полупрозрачный фон */
+        }
+
+        .modal-content {
+            background-color: #fff; /* Белый фон */
+            margin: 0 auto; /* Центрирование по горизонтали */
+            padding: 20px; /* Внутренние отступы */
+            border: 1px solid #888; /* Серый контур */
+            width: 100%; /* Ширина модального окна */
+            border-radius: 10px; /* Закругленные углы */
+            max-height: 100%; /* Максимальная высота */
+        
+        }
+
+        .close {
+            color: #aaa; /* Светло-серый цвет текста */
+            float: right; /* Выравнивание по правому краю */
+            font-size: 28px; /* Размер шрифта */
+            font-weight: bold; /* Жирный шрифт */
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black; /* Черный цвет текста при наведении */
+            text-decoration: none; /* Убирает подчеркивание */
+            cursor: pointer; /* Курсор в виде указателя */
+        }
+
+        button.big-button {
+            background-color: #007BFF; /* Синий фон */
+            color: white; /* Белый цвет текста */
+            border: none; /* Убирает границу */
+            cursor: pointer; /* Курсор в виде указателя */
+            border-radius: 5px; /* Закругленные углы */
+            transition: transform 0.3s ease-in-out; /* Плавный переход */
+            width: 100%; /* Кнопка на всю ширину контейнера */
+            height: 100px;
+            font-size: 20px;
+            margin-top: 40px; /* Отступ сверху */
+        }
+                
+        button.big-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+ 
+{% if g.user %}
+
+<div style="
+    position: absolute; /* Абсолютное позиционирование */
+    top: 10px;          /* Расположение сверху */
+    left: 10px;         /* Слева от границы окна */
+    font-size: 24px;    /* Большой размер шрифта */
+    background-color: #ffffff; /* Белоснежный фон */
+    padding: 10px;      /* Внутренние отступы */
+    border-radius: 10px;/* Круглые края */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
+">
+    <strong>ФИО:</strong> {{ g.user.first_name }} {{ g.user.last_name }}<br /><br />
+    <strong>Роли:</strong><br />
+    {% if g.user.role_admin %}<span>Администратор, </span>{% endif %}
+    {% if g.user.role_author %}<span>Автор, </span>{% endif %}
+    {% if g.user.role_expert %}<span>Эксперт, </span>{% endif %}
+    <!-- Формируем форму для выхода -->
+    <form method="post" action="/logout">
+        <button type="submit" style="margin-top: 20px;">Выход</button>
+    </form>
+</div>
+{% endif %}    
+
+<body>
+    <div class="window">
+        <div class="wrapper">
+            <h1>Региональный портал ДПО</h1>
+            <button class="big-button" id="constructor-programs" onclick="goToKonstruktor0Page()">Мои программы </button>
+            <button class="big-button" id="expert-system" onclick="goToIxpertizaPage()">Подсистема экспертизы</button>
+            <button class="big-button" id="admin-section" onclick="goToAdminPage()">Раздел администратора</button>
+        </div>  
+    </div>      
+</body>
+
+<script>
+    // Функция для перехода на страницу администратора
+    function goToAdminPage() {
+        window.location.href = "{{ url_for('admin_page') }}";
+    }
+    function goToIxpertizaPage() {
+        window.location.href = "{{ url_for('ixpertiza_page') }}";
+    }
+    function goToKonstruktor0Page() {
+        window.location.href = "{{ url_for('konstruktor0_page') }}";
+    }
+</script>
+
+</body>
+</html>

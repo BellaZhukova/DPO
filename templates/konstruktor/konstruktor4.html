@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список сокращений</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='konstruktor2.css') }}">
+    <style>
+        /* Общий класс для кнопок */
+        .action-button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Контейнеры для кнопок */
+        .bottom-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="header-block">
+            <h3>Панель редактирования</h3>
+        </div>
+        
+        <h4>СПИСОК СОКРАЩЕНИЙ</h4>
+
+        
+        <button id="publish-button">Сохранить</button>
+    </div>
+
+    <div class="page-container">
+        <div class="page-a4">
+            <h4>Список сокращений и условных обозначений</h4>
+            <table id="editableTable">
+        <thead>
+            <tr>
+                <th>Аббревиатура</th>
+                <th>Полное название</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td contenteditable="true">ГИА</td>
+                <td contenteditable="true">Государственная итоговая аттестация</td>
+            </tr>
+            <tr>
+                <td contenteditable="true">ЕГЭ</td>
+                <td contenteditable="true">Единый государственный экзамен</td>
+            </tr>
+            <tr>
+                <td contenteditable="true">Рособрнадзор</td>
+                <td contenteditable="true">Федеральная служба по надзору в сфере образования и науки</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Выпадающее меню -->
+    <ul class="dropdown-menu">
+        <li><a href="#" data-action="delete-row">Удалить</a></li>
+        <li><a href="#" data-action="add-row">Добавить строку</a></li>
+    </ul>
+       
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка "Назад" -->
+<div class="bottom-left">
+    <button id="back-button" class="action-button" onclick="history.back()">Назад</button>
+</div>
+
+<!-- Кнопка "Дальше" -->
+<div class="bottom-right">
+    <button id="next-button" class="action-button" onclick="goToKonstruktor5Page()">Дальше</button>
+</div>
+
+<script>
+// Получаем выпадающее меню
+const dropdownMenu = document.querySelector('.dropdown-menu');
+
+// Текущая активная строка
+let activeRow = null;
+
+// Переменная для хранения таймера отображения меню
+let showTimer;
+
+// Делаем контент всех ячеек редактируемым
+document.querySelectorAll('#editableTable td').forEach(td => {
+    td.setAttribute("contenteditable", true);
+});
+
+// Подписываемся на событие изменения содержимого ячейки
+document.querySelectorAll('#editableTable td').forEach(td => {
+    td.addEventListener('input', () => {
+        console.log(`Изменилась ячейка: ${td.textContent}`);
+    });
+});
+
+// Обработчики событий
+document.getElementById('editableTable').addEventListener('mousemove', function(event) {
+    // Определяем текущую строку
+    const tr = event.target.closest('tr');
+
+    // Обновляем активность строки
+    if (tr !== activeRow) {
+        activeRow = tr;
+        resetMenu(); // сбрасываем статус меню
+    }
+
+    clearTimeout(showTimer); // очищаем предыдущий таймер
+    showTimer = setTimeout(() => {
+        if (activeRow && !dropdownMenu.classList.contains('show')) {
+            // Берём координаты курсора
+            const x = event.pageX + 10; // Правее на 10 пикселей
+            const y = event.pageY + 10; // Ниже на 10 пикселей
+
+            // Располагаем меню относительно курсора
+            dropdownMenu.style.top = `${y}px`;
+            dropdownMenu.style.left = `${x}px`;
+            showDropdown();
+        }
+    }, 500); // Задержка перед открытием меню
+});
+
+// Прячется меню, когда курсор покидает таблицу
+document.getElementById('editableTable').addEventListener('mouseleave', function(event) {
+    // Проверяем, не переходит ли курсор на выпадающее меню
+    if (!event.relatedTarget?.closest('.dropdown-menu')) {
+        hideDropdown();
+    }
+});
+
+// Проверка, находится ли курсор над таблицей или меню
+window.addEventListener('mousemove', function(event) {
+    const inTable = document.elementFromPoint(event.pageX, event.pageY).closest('#editableTable');
+    const inMenu = document.elementFromPoint(event.pageX, event.pageY).closest('.dropdown-menu');
+
+    if (!inTable && !inMenu) {
+        hideDropdown(); // скрываем меню, если курсор ни там, ни тут
+    }
+});
+
+// Обрабатываем клики по элементам меню
+dropdownMenu.addEventListener('click', function(event) {
+    event.preventDefault();
+    let actionType = event.target.dataset.action;
+
+    switch(actionType) {
+        case 'delete-row':
+            removeRow(activeRow);
+            break;
+        case 'add-row':
+            addNewRow();
+            break;
+    }
+
+    hideDropdown(); // прячем меню после выполнения действия
+});
+
+// Вспомогательные функции
+
+// Сброс состояния меню
+function resetMenu() {
+    dropdownMenu.classList.remove('show');
+}
+
+// Открываем меню
+function showDropdown() {
+    dropdownMenu.classList.add('show');
+}
+
+// Закрываем меню
+function hideDropdown() {
+    dropdownMenu.classList.remove('show');
+}
+
+// Удаляет указанную строку
+function removeRow(row) {
+    if (row.parentNode.tagName.toLowerCase() === 'thead') {
+        alert("Нельзя удалить шапку таблицы");
+        return; // Заблокировано удаление шапки
+    }
+    if (row) {
+        row.parentNode.removeChild(row);
+    }
+}
+
+// Добавляет новую пустую строку
+function addNewRow() {
+    const tbody = document.querySelector('#editableTable tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+// Изначально меню скрыто
+resetMenu();
+
+function goToKonstruktor5Page() {
+        window.location.href =  "{{ url_for('konstruktor5_page') }}";
+    }
+</script>
+
+</body>
+</html>

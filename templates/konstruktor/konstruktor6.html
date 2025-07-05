@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор учебных планов</title>
+    <style>
+        /* Общие настройки */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Основная сетка */
+        .container {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Сайдбар слева */
+        .sidebar {
+            width: 50%;
+            padding: 20px;
+            background-color: #f2f7d7;
+            border-right: 5px solid #ccc;
+        }
+
+        /* Правая часть страницы (лист А4) */
+        .page-container {
+            width: 70%;
+            height: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Листы формата А4 */
+        .page-a4 {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            outline: 4px solid #ccc;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили для таблиц */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        /* Специфические классы для разных колонок */
+        .code-cell {
+            width: 6%; /* ширина столбца Код */
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .lecture-cell { /* Класс для колонки 'Лект.' */
+            width: 6%; /*  ширина Лект. */
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .practice-cell { /* Класс для колонки 'Практика' */
+            width: 6%; /* ширинуа практики */
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .total-cell { /* Класс для колонки 'Итого' */
+            width: 6%; /* Ширина Итого */
+            max-width: 5em;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .auditorium-days-cell { /* Класс для колонки 'Кол-во аудиторных дней' */
+            width: 6%; /* Ширина */
+            overflow: hidden;
+
+        }
+
+        .distant-cell { /* Новый класс для колонки 'Дистанционно' */
+            width: 6%; /* ШИРИНа */
+
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* Дополнительное оформление полей ввода */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+    
+        /* Оформление кнопок */
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Фиксированные кнопки внизу страницы */
+        .bottom-left,
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+        }
+
+        .bottom-left {
+            left: 20px;
+        }
+
+        .bottom-right {
+            right: 20px;
+        }
+
+        /* Заголовок блока */
+        .header-block {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf1cb;
+            color: black;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            border: 3px solid #ccc;
+        }
+
+        /* Режим печати листов формата А4 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body, html {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container, .sidebar, .bottom-right {
+                display: none !important;
+            }
+
+            .page-container {
+                width: 100%;
+                height: 100%;
+            }
+
+            .page-a4 {
+                outline: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <div class="header-block">
+            <h3>Панель редактирования</h3>
+        </div>
+        <div id="tablesContainer"></div>
+
+        <!-- Кнопки для добавления элементов -->
+        <button id="module-button">Добавить модуль</button>
+        <button id="attestation-button">Добавить аттестацию</button>
+
+        <!-- Кнопка публикации -->
+        <button id="publish-button">Сохранить</button>
+    </div>
+    
+    <div class="page-container">
+        <div class="page-a4">
+            <!-- Здесь выводится учебный план -->
+        </div>
+    </div>
+</div>
+
+<!-- Фиксированная кнопка "Назад" -->
+<div class="bottom-left">
+    <button id="back-button" onclick="history.back()">Назад</button>
+</div>
+
+<!-- Фиксированная кнопка "Дальше" -->
+<div class="bottom-right">
+    <button id="next-button" onclick="goToKonstruktor7Page()">Дальше</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const moduleButton = document.querySelector('#module-button');
+        const attestationButton = document.querySelector('#attestation-button');
+
+        if (moduleButton && attestationButton) {
+            moduleButton.onclick = addModule;
+            attestationButton.onclick = addAttestation;
+        }
+    });
+
+    // Функция для добавления нового модуля
+    function addModule() {
+        let tablesContainer = document.querySelector("#tablesContainer");
+        let newTable = document.createElement("table");
+
+        // Создание строки заголовков
+        let headerRow = newTable.insertRow();
+        ["Код", "Название модуля", "Лект.", "Прак.", "Дист.", "Итого", "КАД"].forEach((thText, index) => {
+            let th = document.createElement("th");
+            th.textContent = thText;
+            if(index === 0) th.classList.add('code-cell'); // Код
+            if(index === 2) th.classList.add('lecture-cell'); // Лект.
+            if(index === 3) th.classList.add('practice-cell'); // Практика
+            if(index === 4) th.classList.add('distant-cell'); // Дистанционно
+            if(index === 5) th.classList.add('total-cell'); // Итого
+            if(index === 6) th.classList.add('auditorium-days-cell'); // Кол-во аудиторных дней
+            headerRow.append(th);
+        });
+
+        // Первая строка с полями для ввода
+        let dataRow = newTable.insertRow();
+        for(let i = 0; i < 7; i++) {
+            let cell = dataRow.insertCell(i);
+            if(i === 0) {
+                cell.classList.add('code-cell');
+                cell.innerHTML = '<input type="text" maxlength="5"/>';
+            } else if(i === 1) {
+                cell.innerHTML = "<input type='text'/>";
+            } else if([2, 3].includes(i)) { // Лект. и Практика
+                cell.classList.add(i === 2 ? 'lecture-cell' : 'practice-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else if(i === 4) { // Дистанционно
+                cell.classList.add('distant-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else if(i === 5) { // Итого
+                cell.classList.add('total-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else if(i === 6) { // Кол-во аудиторных дней
+                cell.classList.add('auditorium-days-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else {
+                cell.innerHTML = "<input type='number'/>";
+            }
+        }
+
+        tablesContainer.append(newTable);
+    }
+
+    // Функция для добавления новой аттестации
+    function addAttestation() {
+        let tablesContainer = document.querySelector("#tablesContainer");
+        let newTable = document.createElement("table");
+
+        // Создание строки заголовков
+        let headerRow = newTable.insertRow();
+        ["Название аттестации", "Лект.", "Практика", "Дистанционно", "Форма аттестации", "Итого"].forEach((thText, index) => {
+            let th = document.createElement("th");
+            th.textContent = thText;
+            if(index === 1) th.classList.add('lecture-cell'); // Лект.
+            if(index === 2) th.classList.add('practice-cell'); // Практика
+            if(index === 3) th.classList.add('distant-cell'); // Дистанционно
+            if(index === 5) th.classList.add('total-cell'); // Итого
+            headerRow.append(th);
+        });
+
+        // Первая строка с полями для ввода
+        let dataRow = newTable.insertRow();
+        for(let i = 0; i < 6; i++) {
+            let cell = dataRow.insertCell(i);
+            if(i === 0) {
+                cell.classList.add('code-cell');
+                cell.innerHTML = '<input type="text"/>';
+            } else if(i === 1 || i === 2) { // Лект. и Практика
+                cell.classList.add(i === 1 ? 'lecture-cell' : 'practice-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else if(i === 3) { // Дистанционно
+                cell.classList.add('distant-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else if(i === 4) {
+                cell.innerHTML = `
+                    <select>
+                        <option value="">Выберите форму</option>
+                        <option value="Экзамен">Экзамен</option>
+                        <option value="Зачёт">Зачёт</option>
+                    </select>
+                `;
+            } else if(i === 5) { // Итого
+                cell.classList.add('total-cell');
+                cell.innerHTML = "<input type='number'/>";
+            } else {
+                cell.innerHTML = "<input type='number'/>";
+            }
+        }
+
+        tablesContainer.append(newTable);
+    }
+
+    function goToKonstruktor7Page() {
+        window.location.href = "{{ url_for('konstruktor7_page') }}";
+    }
+</script>
+</body>
+</html>

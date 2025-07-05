@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>A4 Page Writing</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .page-container {
+            position: relative;
+            width: 21cm;
+            height: 29.7cm;
+            border: 1px solid #ccc;
+            overflow-y: hidden;
+            box-sizing: border-box;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        textarea {
+            resize: none;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            padding: 10px;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.5;
+            color: black;
+            background-color: transparent;
+            border: none;
+            cursor: text;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+        
+        @media print {
+            /* Настройки печати */
+            .page-container {
+                page-break-inside: avoid;
+                page-break-after: always;
+            }
+            
+            /* Скрываем лишние элементы при печати */
+            button {
+                visibility: hidden;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="pages"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pages = document.getElementById('pages');
+    
+    // Функция добавления одной страницы
+    function addPage() {
+        let newPageDiv = document.createElement('div');
+        newPageDiv.className = 'page-container';
+        newPageDiv.innerHTML = `
+            <textarea placeholder="Введите текст..."></textarea>
+        `;
+        pages.appendChild(newPageDiv);
+    }
+    
+    // Первая страница
+    addPage();
+    
+    // Регистрация события для всех текстовых полей
+    pages.addEventListener('input', event => {
+        if(event.target.tagName === 'TEXTAREA') {
+            const currentTextArea = event.target;
+            const parentContainer = currentTextArea.parentNode;
+            
+            // Только когда текст доходит до самого низа
+            if(currentTextArea.scrollHeight > currentTextArea.clientHeight) {
+                // Лист полон, добавляем новую страницу
+                addPage();
+                
+                // Переносим фокус на новое текстовое поле
+                const nextTextArea = parentContainer.nextSibling.querySelector('textarea');
+                nextTextArea.focus();
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>

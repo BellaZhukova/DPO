@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Раздел экспертизы</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        /* Кнопка слева от заголовка */
+        .top-left-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #000; /* Общая граница таблицы */
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ccc; /* Границы ячеек таблицы */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        /* Лист формата A4 */
+        .a4-paper {
+            width: 210mm;          /* Ширина листа А4 */
+            height: 297mm;         /* Высота листа А4 */
+            background-color: white;
+            padding: 20px;         /* Для внутренних отступов */
+            border: 1px solid #ccc; /* Рамка вокруг листа */
+            box-sizing: border-box; /* Включаем внутренние отступы в общую ширину и высоту */
+            margin: 20px auto;     /* Центрируем блок относительно окна */
+            
+            /* Эти свойства гарантируют отсутствие выхода за пределы */
+            overflow: hidden;      /* Запрещаем любые полосы прокрутки */
+            word-wrap: break-word; /* Разрешаем перенос длинных слов */
+            hyphens: auto;         /* Автоматически вставляет переносы слов там, где возможно */
+        }
+
+        /* Скрытые комментарии */
+        .hidden-comments {
+            display: none;
+        }
+
+        .remark-container {
+            width: 100%;                  /* Занимает всю ширину доступной ячейки */
+            max-width: 100%;              /* Максимальная ширина равна ширине ячейки */
+            padding: 0px;                 /* Небольшие отступы */
+            border: 1px solid #ccc;       /* Оформление рамки */
+            resize: vertical;             /* Позволяет растягивать только вертикально */
+            overflow-y: auto;             /* Добавляет вертикальную прокрутку при необходимости */
+            overflow-x: hidden;           /* Запрещает горизонтальное переполнение */
+            white-space: pre-line;        /* Сохраняет переводы строк, позволяя переносить длинные строки */
+            word-wrap: break-word;        /* Разбивает длинные слова, предотвращая переполнение */
+        }
+
+        .remark-container:focus {
+            outline: none;           /* Удаляем фокусное подчеркивание */
+        }
+
+        .remark-container::placeholder {
+            opacity: 0.6;            /* Делаем плейсхолдер полупрозрачным */
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .selected-row {
+            background-color: #73b2ec !important;
+        }
+    </style>
+</head>
+<body>
+<div class="window">
+    <button class="top-left-button primary-button" onclick="history.back()">Назад</button>
+    <h1 style="text-align:center;">Раздел экспертизы</h1>
+    <div class="a4-paper">
+        <table>
+            <thead>
+                <tr>
+                    <th>№ п/п</th>
+                    <th>Критерий экспертизы программы</th>
+                    <th>Да</th>
+                    <th>Нет</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1.1.</td>
+                    <td>Актуальность разработки и реализации программы имеет убедительное и конкретное обоснование, тематика программы соответствует государственной политике в сфере образования</td>
+                    <td><input type="radio" name="q1_1" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q1_1" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q1_1" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q1_1" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>1.2.</td>
+                    <td>Цель и тема программы соответствуют друг другу</td>
+                    <td><input type="radio" name="q1_2" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q1_2" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q1_2" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q1_2" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>1.3.</td>
+                    <td>Профессиональный стандарт или Единый квалификационный справочник должностей соответствуют выбранной категории слушателей, категория слушателей указана корректно</td>
+                    <td><input type="radio" name="q1_3" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q1_3" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q1_3" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q1_3" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>1.4.</td>
+                    <td>Планируемые результаты обучения (в части «знать» и «уметь») соответствуют трудовым действиям согласно профессиональному стандарту или должностным обязанностям согласно Единому квалификационному справочнику должностей</td>
+                    <td><input type="radio" name="q1_4" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q1_4" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q1_4" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q1_4" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>1.5.</td>
+                    <td>Планируемые результаты обучения по программе соответствуют теме и цели программы</td>
+                    <td><input type="radio" name="q1_5" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q1_5" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q1_5" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q1_5" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>2.1.</td>
+                    <td>Содержание программы соответствует теме программы</td>
+                    <td><input type="radio" name="q2_1" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q2_1" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q2_1" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q2_1" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>2.2.</td>
+                    <td>Рабочие программы образовательных модулей соответствуют учебному (тематическому) плану</td>
+                    <td><input type="radio" name="q2_2" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q2_2" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q2_2" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q2_2" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>2.3.</td>
+                    <td>Содержание программы позволяет достигнуть планируемых результатов обучения по программе</td>
+                    <td><input type="radio" name="q2_3" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q2_3" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q2_3" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q2_3" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>2.4.</td>
+                    <td>Формы и виды учебной деятельности слушателей позволяют обеспечить достижение планируемых результатов обучения</td>
+                    <td><input type="radio" name="q2_4" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q2_4" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q2_4" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q2_4" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>3.1.</td>
+                    <td>Критерии оценки аттестации слушателей по итогам освоения образовательных модулей (программы) описаны подробно и корректно</td>
+                    <td><input type="radio" name="q3_1" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q3_1" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q3_1" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q3_1" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>3.2.</td>
+                    <td>Оценочные материалы по программе позволяют диагностировать достижение планируемых знаний</td>
+                    <td><input type="radio" name="q3_2" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q3_2" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q3_2" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q3_2" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>3.3.</td>
+                    <td>Оценочные материалы по программе позволяют диагностировать достижение планируемых умений</td>
+                    <td><input type="radio" name="q3_3" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q3_3" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q3_3" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q3_3" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>3.4.</td>
+                    <td>Представленные примеры заданий аттестации наглядно демонстрируют, на оценку каких планируемых результатов обучения по программе они направлены</td>
+                    <td><input type="radio" name="q3_4" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q3_4" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q3_4" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q3_4" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>4.1.</td>
+                    <td>Список нормативно-правовых и методических документов согласуется с содержанием программы, ссылки на электронные ресурсы являются рабочими</td>
+                    <td><input type="radio" name="q4_1" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q4_1" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q4_1" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q4_1" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>4.2.</td>
+                    <td>Список основной согласуется с содержанием программы, включает источники не старше пяти лет, ссылки на электронные ресурсы являются рабочими</td>
+                    <td><input type="radio" name="q4_2" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q4_2" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q4_2" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q4_2" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>4.3.</td>
+                    <td>Список дополнительной литературы согласуется с содержанием программы, ссылки на электронные ресурсы являются рабочими</td>
+                    <td><input type="radio" name="q4_3" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q4_3" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q4_3" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q4_3" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>4.4.</td>
+                    <td>Перечень ресурсов электронной поддержки образовательного процесса согласуется с содержанием программы, ссылки на электронные ресурсы являются рабочими</td>
+                    <td><input type="radio" name="q4_4" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q4_4" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q4_4" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q4_4" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>4.5.</td>
+                    <td>Предусмотрены необходимые технические средства обучения для проведения очных занятий и организации дистанционного обучения</td>
+                    <td><input type="radio" name="q4_5" value="yes" onclick="toggleComments(this, false)"></td>
+                    <td><input type="radio" name="q4_5" value="no" onclick="toggleComments(this, true)"></td>
+                </tr>
+                <tr class="comment-row hidden-comments">
+                    <td colspan="4">
+                        <textarea class="remark-container" name="remarks_q4_5" rows="2">Замечания:</textarea><br />
+                        <textarea class="remark-container" name="recommendations_q4_5" rows="2">Рекомендации по исправлению замечаний:</textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Функция для переключения между комментариями
+    function toggleComments(radioButton, show) {
+        const row = radioButton.closest('tr');
+        const commentRow = row.nextElementSibling;
+    
+        if (commentRow && commentRow.classList.contains('comment-row')) {
+            if (show) {
+                commentRow.classList.remove('hidden-comments');
+            } else {
+                commentRow.classList.add('hidden-comments');
+            }
+        }
+    }
+
+    // Запрет редактирования примечаний
+    document.querySelectorAll('.remark-container').forEach(textarea => {
+        textarea.oninput = function(event) {
+            event.preventDefault(); // Блокирует изменение текста
+        };
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Архив пользователей</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+        }
+		/* Добавляем стили для кнопки "Назад" */
+.back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.3s ease-in-out;
+    padding: 5px 10px;
+    z-index: 1000; /* Чтобы кнопка была поверх всех элементов */
+    width: 100px; /* Ширина кнопки */
+    height: 30px; /* Высота кнопки */
+}
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #9c9595;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+		/* Добавляем стили для кнопки "Назад" */
+.back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.3s ease-in-out;
+    padding: 5px 10px;
+    z-index: 1000; /* Чтобы кнопка была поверх всех элементов */
+    width: 100px; /* Ширина кнопки */
+    height: 30px; /* Высота кнопки */
+}
+
+    </style>
+</head>
+<body>
+<div class="window">
+<!-- Добавляем кнопку "Назад" -->	
+<button class="back-button" onclick="history.back()">Назад</button>
+    <h1 style="text-align:center;">Архив пользователей</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Учреждение</th>
+                <th>Должность</th>
+                <th>Предметы</th>
+                <th>Степень</th>
+                <th>Роли</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Здесь будут выводиться пользователи из архива -->
+            <!-- Этот шаблон используется для вывода списка пользователей из вашего backend -->
+            {% for archived_user in archived_users %}
+            <tr>
+                <td>{{ archived_user.last_name }} {{ archived_user.first_name }} {{ archived_user.middle_name }}</td>
+                <td>{{ archived_user.institution }}</td>
+                <td>{{ archived_user.position }}</td>
+                <td>{{ archived_user.subjects_taught }}</td>
+                <td>{{ archived_user.academic_degree }}</td>
+                <td>{% for role in archived_user.roles %}{{ role }}<br />{% endfor %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

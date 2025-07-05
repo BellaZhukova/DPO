@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор учебных планов</title>
+    <style>
+        /* Общие настройки */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Основная сетка */
+        .container {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Сайдбар слева */
+        .sidebar {
+            width: 50%;
+            padding: 20px;
+            background-color: #f2f7d7;
+            border-right: 5px solid #ccc;
+        }
+
+        /* Правая часть страницы (лист А4) */
+        .page-container {
+            width: 70%;
+            height: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Листы формата А4 */
+        .page-a4 {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            outline: 4px solid #ccc;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили для таблиц */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        /* Оформление полей ввода */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Форматирование кнопок */
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Фиксированная кнопка внизу справа */
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        /* Заголовок блока */
+        .header-block {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf1cb;
+            color: black;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            border: 3px solid #ccc;
+        }
+
+        /* Скрытие поля ввода по умолчанию */
+        #other-device, #other-distance-device {
+            display: none;
+        }
+
+        /* Печать страниц формата А4 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body, html {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container, .sidebar, .bottom-right {
+                display: none !important;
+            }
+
+            .page-container {
+                width: 100%;
+                height: 100%;
+            }
+
+            .page-a4 {
+                outline: none;
+            }
+        }
+		textarea {
+    width: 100%;
+    height: auto;       
+    resize: none;       /* Запрет изменения размера руками */
+    overflow-y: hidden; /* Без скролинга */
+    min-height: 60px;  /* Начальная минимальная высота */
+}
+h3{
+text-align:center;
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <div class="header-block">
+            <h3>Панель редактирования</h3>
+        </div>
+        
+        <h3>ОРГАНИЗАЦИОННО-ПЕДАГОГИЧЕСКИЕ УСЛОВИЯ РЕАЛИЗАЦИИ ПРОГРАММЫ</h3>
+        
+        <h4>Организационно-методическое и информационное обеспечение программы</h4>
+
+        <form id="assessment-form">
+            <label for="normative-documents">Нормативные документы:</label><br>
+            <textarea id="normative-documents" rows="4" cols="50"></textarea><br>
+            
+            <label for="main-literature">Основная литература:</label><br>
+            <textarea id="main-literature" rows="4" cols="50"></textarea><br>
+            
+            <label for="additional-literature">Дополнительная литература:</label><br>
+            <textarea id="additional-literature" rows="4" cols="50"></textarea><br>
+
+            <label for="electronic-materials">Электронные учебные материалы:</label><br>
+            <textarea id="electronic-materials" rows="4" cols="50"></textarea><br>
+
+            <label for="internet-resources">Интернет-ресурсы:</label><br>
+            <textarea id="internet-resources" rows="4" cols="50"></textarea><br>
+        </form>
+        
+        <h4>Материально-технические условия реализации программы</h4>
+        
+        <h5>Аудиторные занятия</h5>
+        <ul style="list-style-type:none;padding-left:0;margin-bottom:10px;">
+            <li><input type="checkbox" name="equipment" value="computer">Компьютер</li>
+            <li><input type="checkbox" name="equipment" value="projector">Проектор</li>
+            <li><input type="checkbox" name="equipment" value="interactive_board">Интерактивная доска</li>
+            <li><input type="checkbox" name="equipment" value="speakers">Колонки</li>
+            <li><input type="checkbox" name="equipment" value="marker_boards">Маркерные доски или флипчарты</li>
+            <li><input type="checkbox" name="equipment" value="other" onchange="toggleOtherDevice(this.checked)">Иное</li>
+        </ul>
+        <input type="text" id="other-device" placeholder="Укажите оборудование..." disabled>
+
+        <h5>Дистанционное обучение</h5>
+        <ul style="list-style-type:none;padding-left:0;margin-bottom:10px;">
+            <li><input type="checkbox" name="distance-learning-equipment" value="pc-internet">Персональный компьютер с подключением к Интернету</li>
+            <li><input type="checkbox" name="distance-learning-equipment" value="audio-devices">Колонки/наушники или встроенный динамик для воспроизведения учебных материалов</li>
+            <li><input type="checkbox" name="distance-learning-equipment" value="software">Стандартное программное обеспечение (браузер, текстовый редактор, просмотрщик PDF)</li>
+            <li><input type="checkbox" name="distance-learning-equipment" value="other-distance" onchange="toggleOtherDistanceDevice(this.checked)">Иное</li>
+        </ul>
+        <input type="text" id="other-distance-device" placeholder="Укажите дополнительное оборудование..." disabled>
+
+        <h4>Кадровое обеспечение образовательного процесса</h4>
+
+        <form id="assessment-form">
+            <label for="personnel-provision">Кадровое обеспечение</label><br>
+            <textarea id="personnel-provision" rows="4" cols="50"></textarea><br>
+        </form>
+
+        <!-- Кнопка возврата -->
+        <button id="back-button" onclick="goBack()">Назад</button>
+
+        <!-- Кнопка публикации -->
+        <button id="publish-button">Сохранить</button>
+    </div>
+    
+    <div class="page-container">
+        <div class="page-a4">
+            <!-- Лист формата А4 для предпросмотра результата -->
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Функционал переключения видимости полей "Иное"
+    function toggleOtherDevice(show) {
+        var otherInput = document.getElementById("other-device");
+        if (show) {
+            otherInput.disabled = false;
+            otherInput.style.display = "block";
+        } else {
+            otherInput.disabled = true;
+            otherInput.style.display = "none";
+        }
+    }
+
+    function toggleOtherDistanceDevice(show) {
+        var otherInput = document.getElementById("other-distance-device");
+        if (show) {
+            otherInput.disabled = false;
+            otherInput.style.display = "block";
+        } else {
+            otherInput.disabled = true;
+            otherInput.style.display = "none";
+        }
+    }
+
+    // Функционал возвращения назад
+    function goBack() {
+        history.back();
+    }
+	document.querySelectorAll('textarea').forEach(textArea => {
+    textArea.addEventListener("input", () => {
+        const computedStyle = window.getComputedStyle(textArea);
+        const lineHeight = parseFloat(computedStyle.lineHeight || 1.2 * textArea.clientHeight / textArea.rows);
+    
+        let newHeight = Math.ceil((textArea.scrollHeight + 10) / lineHeight) * lineHeight;
+    
+        if (newHeight > textArea.offsetHeight) {
+            textArea.style.height = `${newHeight}px`;
+        }
+    });
+});
+const textareas = document.querySelectorAll('textarea');
+
+// Для каждого textarea добавляем обработчик события input
+textareas.forEach(function(textarea) {
+    textarea.addEventListener('input', function() {
+        // Определяем нужную высоту для отображения всех символов
+        this.style.height = '';
+        this.style.height = this.scrollHeight + 'px';
+    });
+});
+</script>
+</body>
+</html>

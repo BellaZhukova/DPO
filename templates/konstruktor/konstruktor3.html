@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор документов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='konstruktor2.css') }}">
+    <style>
+        /* Общий класс для кнопок */
+        .action-button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Контейнеры для кнопок */
+        .bottom-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="header-block">
+            <h3>Панель редактирования</h3>
+        </div>
+        
+        <h4>ЛИСТ СОГЛАСОВАНИЯ</h4>
+
+        <label for="author-select">Соавтор 1:</label><br />
+        <select id="author-select" class="form-element">
+            <option value="">Выберите автора</option>
+        </select>
+    
+        <label for="second-author-select">Соавтор 2:</label><br />
+        <select id="second-author-select" class="form-element">
+            <option value="">Выберите второго автора</option>
+        </select>
+        
+        <button id="publish-button">Сохранить</button>
+    </div>
+
+    <div class="page-container">
+        <div class="page-a4">
+            <h4>ЛИСТ СОГЛАСОВАНИЯ</h4>
+            
+            <div class="inner-page">
+                <h1 id="institution-output-new"></h1>
+                <p>Разработчик(и) программы:</p>
+                <div id="authors-list">
+                    <div id="current-user-info">{{ g.user.first_name }} {{ g.user.last_name }}, {{ g.user.position }}, {{ g.user.institution }}</div>
+                    <div id="first-coauthor-info"></div>
+                    <div id="second-coauthor-info"></div>
+                </div>
+
+                <!-- Таблица должна находиться ВНУТРИ страницы A4 -->
+                <p>Дополнительная профессиональная программа повышения квалификации "<span id="program-name">Название Программы</span>", прошла экспертизу:</p>
+
+                <ul class="experts-list">
+                    <li class="expert-item">
+                        Эксперт 1:<br/>
+                        Иван Петров, старший преподаватель, Московский государственный университет, дата экспертизы: 10.03.2025, подпись: ___________
+                    </li>
+                    <li class="expert-item">
+                        Эксперт 2:<br/>
+                        Анна Иванова, доцент, Институт образования Калининграда, дата экспертизы: 15.03.2025, подпись: ___________
+                    </li>
+                    <li class="expert-item">
+                        Эксперт 3:<br/>
+                        Сергей Смирнов, профессор, Санкт-Петербургский педагогический колледж, дата экспертизы: 20.03.2025, подпись: ___________
+                    </li>
+                </ul>
+
+                <div class="footer-section">
+                    Дополнительная профессиональная программа повышения квалификации "<span id="program-name">Название Программы</span>" утверждена Ученым советом Калининградского областного института развития образования (протокол № ___ от ______ 2025 г.)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка "Назад" -->
+<div class="bottom-left">
+    <button id="back-button" class="action-button" onclick="history.back()">Назад</button>
+</div>
+
+<!-- Кнопка "Дальше" -->
+<div class="bottom-right">
+    <button id="next-button" class="action-button" onclick="goToKonstruktor4Page()">Дальше</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    $.ajax({
+        type: 'GET',
+        url: '/get_authors',
+        success: function(response) {
+            let selectElements = $('#author-select, #second-author-select');
+            response.forEach(author => {
+                selectElements.each(function() {
+                    $(this).append($(`<option value="${author.value}">${author.value}</option>`));
+                });
+            });
+        },
+        error: function(error) {
+            console.error("Error fetching authors:", error);
+        }
+    });
+});
+
+function goToKonstruktor4Page() {
+    window.location.href = "{{ url_for('konstruktor4_page') }}";
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Получаем нужные элементы
+    const authorSelect = document.getElementById('author-select');
+    const secondAuthorSelect = document.getElementById('second-author-select');
+    const firstCoauthorInfo = document.getElementById('first-coauthor-info');
+    const secondCoauthorInfo = document.getElementById('second-coauthor-info');
+    const publishButton = document.getElementById('publish-button');
+
+    // Назначаем событие на кнопку "Сохранить"
+    publishButton.addEventListener('click', async () => {
+        // Собираем данные авторов
+        const selectedFirstAuthor = authorSelect.value.trim();
+        const selectedSecondAuthor = secondAuthorSelect.value.trim();
+
+        // Формируем объект для отправки на сервер
+        const payload = {
+            first_coauthor: selectedFirstAuthor,
+            second_coauthor: selectedSecondAuthor
+        };
+
+        // Отправляем POST-запрос на сервер
+        await fetch('/save_authors', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if (!response.ok) throw new Error('Ошибка при сохранении авторов.');
+            return response.json(); // Ждем ответ от сервера
+        }).then(data => {
+            // Обновляем UI, если нужно
+            firstCoauthorInfo.innerText = selectedFirstAuthor;
+            secondCoauthorInfo.innerText = selectedSecondAuthor;
+        }).catch(err => {
+            alert('Ошибка при сохранении авторов:' + err.message);
+        });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор документов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='konstruktor2.css') }}">
+    <style>
+        /* Общий класс для кнопок */
+        .action-button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Контейнеры для кнопок */
+        .bottom-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="header-block">
+            <h3>Панель редактирования</h3>
+        </div>
+        <h4>ТИТУЛЬНЫЙ ЛИСТ ПРОГРАММЫ</h4>
+        
+        <!-- Заголовок титульного листа -->
+        <label for="institution-select">Заголовок титульного листа:</label><br />
+        <select id="institution-select" class="form-element">
+            <option value="">Выберите учреждение</option>
+            <!-- Данные учреждений будут подгружены динамически -->
+        </select>
+        
+        <!-- Поле для ввода произвольного учреждения (скрывается изначально) -->
+        <div id="custom-institution-div" class="hidden">
+            <label for="custom-institution">Ваше учреждение:</label><br />
+            <input type="text" id="custom-institution" class="form-element" placeholder="Введите наименование учреждения"><br /><br />
+        </div>
+        
+        <!-- Название программы -->
+        <label for="program-name">Название программы:</label><br />
+        <input type="text" id="program-name" class="form-element" placeholder="Введите название программы"><br /><br />
+        
+        <!-- Кнопка публикации -->
+        <button id="publish-button">Сохранить</button>
+    </div>
+    
+    <div class="page-container">
+        <div class="page-a4">
+            <div class="inner-page">
+                <h1 id="institution-output-new"></h1>
+                <h2 id="program-output-new"></h2>
+                
+                <!-- Номер страницы внизу -->
+                <div class="footer-info">
+                    <span>Калининград<br/>2025</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка "Назад" -->
+<div class="bottom-left">
+    <button id="back-button" class="action-button" onclick="history.back()">Назад</button>
+</div>
+
+<!-- Кнопка "Дальше" -->
+<div class="bottom-right">
+    <button id="next-button" class="action-button" onclick="goToKonstruktor3Page()">Дальше</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Элементы формы
+    const institutionSelect = document.getElementById('institution-select');
+    const customInstitutionInput = document.getElementById('custom-institution');
+    const customInstitutionDiv = document.getElementById('custom-institution-div');
+    const institutionOutput = document.getElementById('institution-output-new');
+    const programNameInput = document.getElementById('program-name');
+    const programOutput = document.getElementById('program-output-new');
+    const publishButton = document.getElementById('publish-button');
+
+    // Получаем данные учреждений через API
+    fetch('/api/get_all_institutions')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(inst => {
+                const option = document.createElement('option');
+                option.value = inst.short_name;
+                option.dataset.fullName = inst.full_name;
+                option.text = inst.short_name;
+                institutionSelect.appendChild(option);
+            });
+            
+            // Добавляем пункт "Иное" в конец списка
+            const otherOption = document.createElement('option');
+            otherOption.value = 'other';
+            otherOption.text = 'Иное';
+            institutionSelect.appendChild(otherOption);
+        })
+        .catch(error => console.error("Ошибка загрузки данных:", error));
+
+    // Логика появления поля "Ваше учреждение" только при выборе "Иное"
+    institutionSelect.addEventListener('change', () => {
+        if (institutionSelect.value === 'other') {
+            customInstitutionDiv.classList.remove('hidden'); // Показываем поле
+        } else {
+            customInstitutionDiv.classList.add('hidden'); // Скрываем поле
+        }
+    });
+
+    // Обновление данных при публикации
+    function updateDataForPublish() {
+        let finalInstitutionValue;
+
+        // Если выбрано "Иное", используем введённое пользователем значение
+        if (institutionSelect.value === 'other') {
+            finalInstitutionValue = customInstitutionInput.value.trim();
+        } else {
+            // Используем полное название выбранного учреждения
+            finalInstitutionValue = institutionSelect.options[institutionSelect.selectedIndex].dataset.fullName;
+        }
+
+        // Печатаем на странице А4
+        institutionOutput.textContent = finalInstitutionValue;
+        programOutput.textContent = programNameInput.value;
+    }
+
+    // Присоединяем обработчик события к кнопке "Сохранить"
+    publishButton.addEventListener('click', updateDataForPublish);
+});
+
+// Переход на следующую страницу
+function goToKonstruktor3Page() {
+    window.location.href = "{{ url_for('konstruktor3_page') }}";
+}
+</script>
+
+</body>
+</html>

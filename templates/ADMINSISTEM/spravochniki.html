@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Управление учреждениями</title>
+    <style>
+         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 400px;
+            height: 600px;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            position: relative;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            outline: none;
+            border: 1px solid #ccc;
+        }
+        
+        /* Стили для модальных окон */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 3px solid #888;
+            width: 1000px;
+            height: 600px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            border-radius: 10px;
+        }
+        
+        h2#modalTitle {
+            text-align: center;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* Кнопка "Назад" */
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.3s ease-in-out;
+            padding: 5px 10px;
+            z-index: 1000; /* Чтобы кнопка была поверх всех элементов */
+            width: 100px; /* Ширина кнопки */
+            height: 30px; /* Высота кнопки */
+        }
+        
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<button class="back-button primary-button" onclick="history.back()">Назад</button>
+
+<div class="window">
+    <h1>Справочники системы</h1>
+    <table>
+        <tbody>
+            <tr data-modal-title="Справочник учреждений" data-url="/api/institutions"><td>Справочник учреждений</td></tr>
+            <tr data-modal-title="Справочник подразделений"><td>Справочник подразделений</td></tr>
+            <tr data-modal-title="Справочник трудовых функций" onclick="goToTpudPage()"><td>Справочник трудовых функций и действий</td></tr>
+            <tr data-modal-title="Справочник должностных обязанностей"><td>Справочник должностных обязанностей</td></tr>
+            <tr data-modal-title="Справочник категорий слушателей"><td>Справочник категорий слушателей</td></tr>
+            <tr data-modal-title="Справочник форм обучения"><td>Справочник форм обучения</td></tr>
+            <tr data-modal-title="Справочник учебных предметов"><td>Справочник учебных предметов</td></tr>
+            <tr data-modal-title="Справочник алгоритмов назначения экспертов"><td>Справочник алгоритмов назначения экспертов</td></tr>
+            <tr data-modal-title="Справочник подразделений КОИРО"><td>Справочник подразделений КОИРО</td></tr>
+            <tr data-modal-title="Справочник руководителей КОИРО"><td>Справочник руководителей КОИРО</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Универсальное модальное окно -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">×</span>
+        <h2 id="modalTitle"></h2>
+        <table id="dataTable">
+            <thead>
+                <tr><th>Краткое название</th><th>Полное название</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Подключаем jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+document.querySelectorAll("tr[data-url]").forEach(function(row) {
+    row.addEventListener("click", function() {
+        const title = this.dataset.modalTitle || "Заголовок";
+        const url = this.dataset.url;
+        document.getElementById("modalTitle").innerText = title;
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(response) {
+                const tbody = document.querySelector('#dataTable tbody');
+                tbody.innerHTML = ''; // Очищаем таблицу
+                
+                response.forEach(inst => {
+                    const row = createEditableRow(inst);
+                    tbody.appendChild(row);
+                });
+                
+                // Добавляем пустую строку внизу для создания новой записи
+                addEmptyRow(tbody);
+            },
+            error: function(err) {
+                alert('Ошибка при получении данных!');
+            }
+        });
+        openModal();
+    });
+});
+
+// Генерация редактируемой строки таблицы
+function createEditableRow(inst) {
+    const row = document.createElement('tr');
+    row.classList.add('editable-row');
+    row.dataset.id = inst.institution_id; // Уникальный идентификатор строки
+    
+    // Краткое название
+    const cellShortName = document.createElement('td');
+    cellShortName.textContent = inst.short_name;
+    cellShortName.contentEditable = false;
+    row.appendChild(cellShortName);
+    
+    // Полное название
+    const cellFullName = document.createElement('td');
+    cellFullName.textContent = inst.full_name;
+    cellFullName.contentEditable = false;
+    row.appendChild(cellFullName);
+    
+    // Возможность редактирования двойным кликом
+    row.addEventListener('dblclick', function() {
+        editRow(this);
+    });
+    
+    return row;
+}
+
+// Добавляет пустую строку для добавления новой записи
+function addEmptyRow(tbody) {
+    const emptyRow = document.createElement('tr');
+    emptyRow.classList.add('empty-row');
+    
+    const cellShortName = document.createElement('td');
+    cellShortName.textContent = '';
+    cellShortName.contentEditable = true;
+    emptyRow.appendChild(cellShortName);
+    
+    const cellFullName = document.createElement('td');
+    cellFullName.textContent = '';
+    cellFullName.contentEditable = true;
+    emptyRow.appendChild(cellFullName);
+    
+    // Установка обработчика для клавиш Enter
+    cellFullName.addEventListener('keydown', handleEnterInLastCell);
+    
+    tbody.appendChild(emptyRow);
+}
+
+// Обработчик нажатия клавиши Enter в последней ячейке
+function handleEnterInLastCell(event) {
+    if (event.keyCode === 13) { // Нажата клавиша Enter
+        event.preventDefault();
+        
+        const currentRow = event.target.closest('tr');
+        const cells = currentRow.cells;
+        
+        // Получаем введённые данные
+        const newData = {
+            short_name: cells[0].textContent.trim(),
+            full_name: cells[1].textContent.trim()
+        };
+        
+        // Проверяем наличие данных
+        if (!newData.short_name || !newData.full_name) {
+            alert('Необходимо заполнить оба поля!');
+            return;
+        }
+        
+        // Создаем новую запись
+        submitNewRecord(newData);
+        
+        // Очистка ячейки
+        clearInputCells(currentRow);
+    }
+}
+
+// Очистка полей ввода
+function clearInputCells(row) {
+    for (let i = 0; i < row.cells.length; i++) {
+        row.cells[i].textContent = '';
+    }
+}
+
+// Начало редактирования строки
+function editRow(row) {
+    const cells = row.cells;
+    Array.from(cells).forEach((cell, idx) => {
+        cell.contentEditable = true;
+        cell.focus();
+    });
+    
+    // Слушатель события blur (потеря фокуса) для сохранения изменений
+    row.addEventListener('blur', function() {
+        stopEditing(row);
+    });
+}
+
+// Завершение редактирования
+function stopEditing(row) {
+    const cells = row.cells;
+    const updatedData = {};
+    Array.from(cells).forEach((cell, idx) => {
+        updatedData[idx === 0 ? 'short_name' : 'full_name'] = cell.textContent.trim();
+    });
+    
+    // Добавляем уникальный идентификатор строки для отправки на сервер
+    updatedData['institution_id'] = row.dataset.id;
+    
+    // Отправляем изменения на сервер
+    sendUpdatedData(updatedData);
+    
+    // Блокируем дальнейшие изменения
+    Array.from(cells).forEach((cell, idx) => {
+        cell.contentEditable = false;
+    });
+}
+
+// Отправка обновленных данных на сервер
+function sendUpdatedData(data) {
+    $.ajax({
+        url: "/save-institution",
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(response) {
+            alert('Данные успешно обновлены!');
+        },
+        error: function(err) {
+            alert('Ошибка при сохранении данных!');
+        }
+    });
+}
+
+// Отправка новой записи на сервер
+function submitNewRecord(data) {
+    $.ajax({
+        url: "/create-institution",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(response) {
+            alert('Запись успешно создана!');
+        },
+        error: function(err) {
+            alert('Ошибка при создании записи!');
+        }
+    });
+}
+
+// Функции для открытия/закрытия модального окна
+function openModal() {
+    document.getElementById('myModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('myModal').style.display = 'none';
+}
+
+// Закрытие модального окна при клике вне его области
+window.onclick = function(event) {
+    var modal = document.getElementById('myModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+
+function goToTpudPage() {
+        window.location.href = "{{ url_for('tpud_page') }}";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список трудовых обязанностей</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="window">
+    <h1 style="text-align:center;">Список трудовых обязанностей</h1>
+
+    <!-- Таблица для вывода существующих обязанностей -->
+    <table id="dutiesTable">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Описание</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Форма для добавления новых обязанностей внизу страницы -->
+    <form id="addDutyForm" style="margin-top: 20px; display: flex; align-items: center;">
+        <input type="text" placeholder="Новая обязанность..." required />
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+<!-- Поп-ап окно для подтверждения удаления -->
+<div class="popup" id="deletePopup">
+    <p>Вы уверены, что хотите удалить данную обязанность?</p>
+    <button id="yesBtn">Да</button>
+    <button id="noBtn">Нет</button>
+</div>
+<div class="popup-overlay"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    // Загрузка начальных данных
+    loadData();
+
+    // Обработчик формы добавления новой обязанности
+    $('#addDutyForm').on('submit', function(event) {
+        event.preventDefault(); // предотвращает перезагрузку страницы
+        let newDuty = $(this).find('input[type="text"]').val().trim();
+        if(newDuty.length > 0){
+            $.ajax({
+                method: "POST",
+                url: "/add-duty",
+                data: JSON.stringify({ responsibility: newDuty }),
+                contentType: "application/json",
+                success: function(response) {
+                    console.log(response.message);
+                    loadData(); // обновляем таблицу после добавления
+                    $('input[type="text"]').val('');
+                },
+                error: function(error) {
+                    alert("Ошибка добавления.");
+                }
+            });
+        }
+    });
+
+    // Назначаем обработчики событий для кнопок "Да" и "Нет" глобально
+    $(document).on('click', '#yesBtn', function() {
+        confirmDelete();
+    });
+
+    $(document).on('click', '#noBtn', function() {
+        closePopup();
+    });
+
+    // Назначаем обработчики двойного клика на строки таблицы
+    $('#dutiesTable tbody').on('dblclick', 'tr', function() {
+        var dutyId = $(this).attr('data-id');
+        var dutyText = $(this).find('td:eq(1)').text();
+        showDeletePopup(dutyId, dutyText);
+    });
+
+    // Функция загрузки данных из сервера
+    function loadData(){
+        $.ajax({
+            method: "GET",
+            url: "/get-duties",
+            success: function(data) {
+                var tbody = $("#dutiesTable").find("tbody");
+                tbody.empty();
+                data.forEach((item, index) => {
+                    tbody.append(`
+                        <tr data-id="${item.id}">
+                            <td>${index + 1}</td>
+                            <td>${item.responsibility}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function(error) {
+                alert("Ошибка загрузки данных.");
+            }
+        });
+    };
+
+    // Показ попапа для удаления
+    function showDeletePopup(dutyId, dutyText){
+        $('.popup-overlay').css('display', 'block');
+        $('#deletePopup').css('display', 'block');
+        window.dutyToRemove = dutyId;
+        $('#deletePopup p').text(`Вы уверены, что хотите удалить обязанность "${dutyText}"?`);
+    }
+
+    // Удаление записи
+    function confirmDelete(){
+        $.ajax({
+            method: "DELETE",
+            url: `/remove-duty/${window.dutyToRemove}`,
+            success: function(response) {
+                closePopup();
+                loadData(); // обновляем таблицу после удаления
+            },
+            error: function(error) {
+                alert("Ошибка удаления.");
+            }
+        });
+    }
+
+    // Закрыть попап окна
+    function closePopup(){
+        $('.popup-overlay').css('display', 'none');
+        $('#deletePopup').css('display', 'none');
+    }
+});
+</script>
+</body>
+</html>

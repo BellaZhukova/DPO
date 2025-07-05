@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Справочник трудовых функций и действий</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .expandable-content {
+            display: none;
+            padding-left: 20px;
+        }
+
+        .expandable-content h3 {
+            margin-top: 0;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        li:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        .selected-row {
+            background-color: #73b2ec !important;
+        }
+
+        .modal-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .modal-window form input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .modal-window form input[type="submit"] {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <h1 style="text-align:center;">Справочник трудовых функций и действий</h1>
+        <h2>Трудовые функции <button class="add-function-btn" id="add-new-function">Добавить функцию</button></h2>
+        <ul id="labor-functions-list"></ul>
+
+        <div class="modal-window" id="add-function-modal">
+            <form id="add-function-modal-form">
+                <input type="text" id="new-function-title" placeholder="Введите название новой функции"/>
+                <input type="submit" value="Создать функцию"/>
+            </form>
+        </div>
+
+        <div class="modal-window" id="add-action-modal">
+            <form id="add-action-modal-form">
+                <input type="hidden" id="current-function-id" />
+                <input type="text" id="new-action-title" placeholder="Введите название нового действия"/>
+                <input type="submit" value="Добавить действие"/>
+            </form>
+        </div>
+
+        <div class="overlay" id="overlay"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Загрузка списка функций из базы данных
+            function loadLaborFunctions() {
+                $.getJSON('/labor/functions', function (data) {
+                    $('#labor-functions-list').empty();
+                    data.forEach(function (func) {
+                        let li = $('<li>');
+                        let span = $('<span>').text(func.function_name)
+                                            .attr('data-function-id', func.function_id); // Здесь мы добавляем атрибут
+
+                        li.append(span);
+                        
+                        // Возможность раскрытия/свертывания раздела действий
+                        let expandableContent = $('<div class="expandable-content">');
+                        expandableContent.append($('<h3>').text('Трудовые действия'));
+                        expandableContent.append($('<button class="add-action-btn">').text('Добавить действие'));
+                        
+                        li.append(expandableContent);
+                        $('#labor-functions-list').append(li);
+                        
+                        // Присваивание события клик на кнопку открытия действий
+                        $('span', li).click(function () {
+                            $('.expandable-content').not(expandableContent).hide();
+                            expandableContent.toggle();
+                        });
+                        
+                        // Загрузка действий для функции
+                        $.getJSON(`/labor/actions/${func.function_id}`, function (actions) {
+                            actions.forEach(function (act) {
+                                expandableContent.append($('<p>').text('- ' + act.action_name));
+                            });
+                        });
+                    });
+                });
+            };
+
+            // Первоначальная загрузка данных
+            loadLaborFunctions();
+
+            // Открытие окна добавления функции
+            $('#add-new-function').on('click', function () {
+                $('#overlay').show();
+                $('#add-function-modal').show();
+            });
+
+            // Отправка формы добавления новой функции
+            $('#add-function-modal-form').on('submit', function (e) {
+                e.preventDefault();
+                let newFuncName = $('#new-function-title').val().trim();
+                if (!newFuncName) return;
+                
+                // Собираем данные в JSON
+                const data = { function_name: newFuncName };
+                
+                // Отправляем POST-запрос с правильными заголовками
+                $.ajax({
+                    url: '/labor/add_function',
+                    type: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    data: JSON.stringify(data),
+                    success: function (resp) {
+                        if (resp.status === 'ok') {
+                            loadLaborFunctions(); // Обновляем данные
+                            $('#overlay').hide();
+                            $('#add-function-modal').hide();
+                        } else {
+                            alert('Ошибка при сохранении функции.');
+                        }
+                    },
+                    error: function (err) {
+                        console.error('Ошибка:', err);
+                    }
+                });
+            });
+
+            // Открытие окна добавления действия
+            $('#labor-functions-list').on('click', '.add-action-btn', function () {
+                $('#overlay').show();
+                $('#add-action-modal').show();
+                let parentSpan = $(this).closest('li').find('span');
+                let functionName = parentSpan.text();
+                let functionId = parseInt(parentSpan.attr('data-function-id')); // Теперь правильно считываем атрибут
+                $('#current-function-id').val(functionId);
+            });
+
+            // Отправка формы добавления нового действия
+            $('#add-action-modal-form').on('submit', function (e) {
+                e.preventDefault();
+                let newActName = $('#new-action-title').val().trim();
+                let functionId = $('#current-function-id').val().trim();
+
+                if (!newActName || !functionId || isNaN(parseInt(functionId))) {
+                    alert('Пожалуйста, укажите правильное название действия и номер функции!');
+                    return false;
+                }
+
+                // Собираем данные в JSON
+                const data = { action_name: newActName, function_id: functionId };
+                
+                // Отправляем POST-запрос с правильными заголовками
+                $.ajax({
+                    url: '/labor/add_action',
+                    type: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    data: JSON.stringify(data),
+                    success: function (resp) {
+                        if (resp.status === 'ok') {
+                            loadLaborFunctions(); // Обновляем данные
+                            $('#overlay').hide();
+                            $('#add-action-modal').hide();
+                        } else {
+                            alert('Ошибка при сохранении действия.');
+                        }
+                    },
+                    error: function (err) {
+                        console.error('Ошибка:', err);
+                    }
+                });
+            });
+
+            // Закрытие модальных окон при клике вне окна
+            $('#overlay').on('click', function () {
+                $(this).hide();
+                $('#add-function-modal').hide();
+                $('#add-action-modal').hide();
+            });
+        });
+    </script>
+</body>
+</html>

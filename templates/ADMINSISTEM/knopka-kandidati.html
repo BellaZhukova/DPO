@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список кандидатов</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Позиция кнопки Назад */
+        .top-left-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .selected-row {
+            background-color: #73b2ec !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <button class="top-left-button primary-button" onclick="history.back()">Назад</button>
+        <h1 style="text-align:center;">Кандидаты в авторы</h1>
+
+        <!-- Отображение таблицы кандидатов -->
+        {% if candidates %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Email</th>
+                        <th>Телефон</th>
+                        <th>Учреждение</th>
+                        <th>Должность</th>
+                        <th>Предметы</th>
+                        <th>Степень</th>
+						<th>Звание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in candidates %}
+                        <tr onclick="showPopup(event, this)" class="selectable-row">
+                            <td>{{ candidate.full_name }}</td>
+                            <td>{{ candidate.email }}</td>
+                            <td>{{ candidate.phone_number }}</td>
+                            <td>{{ candidate.institution }}</td>
+                            <td>{{ candidate.position }}</td>
+                            <td>{{ candidate.subjects_taught }}</td>
+                            <td>{{ candidate.academic_degree }}</td>
+							<td>{{ candidate.academic_rank }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Нет заявок в авторы.</p>
+        {% endif %}
+    </div>
+
+    <!-- Полупрозрачный фон (overlay) -->
+    <div class="popup-overlay" id="overlay"></div>
+
+    <!-- Всплывающее окно -->
+    <div class="popup" id="popupWindow">
+        <p id="popupMessage">Принять кандидата в авторы?</p>
+        <button onclick="acceptCandidate()">Принять</button>
+        <button onclick="declineCandidate()">Отклонить</button>
+    </div>
+
+<script>
+// Функция показа всплывающего окна
+function showPopup(event, row) {
+    event.preventDefault();
+    
+    // Выделяем выбранную строку
+    let selectedRows = document.querySelectorAll('.selected-row');
+    selectedRows.forEach(row => row.classList.remove('selected-row'));
+    row.classList.add('selected-row');
+
+    document.getElementById('popupWindow').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+
+    // Добавляем обработчик клика на оверлей для закрытия popup
+    document.getElementById('overlay').onclick = function() {
+        hidePopup();
+    };
+}
+
+// Функции действий кнопки Отклонить
+function declineCandidate() {
+    const popupMessage = document.getElementById('popupMessage');
+    popupMessage.textContent = "Кандидат отклонён.";
+
+    // Находим выделенную строку и берём email кандидата
+    let selectedRow = document.querySelector(".selected-row");
+    let email = selectedRow.cells[1].innerText;  // Email находится во второй ячейке (индекс 1)
+
+    // Отправляем AJAX-запрос на сервер для отправки письма
+    fetch("/send-decline-email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email })
+    }).then(response => response.json())
+      .then(data => {
+          if (data.message === "Кандидат уведомлён и удалён из базы.") {
+              location.reload(); // ✅ Автоматически обновляем страницу
+          }
+      })
+      .catch(error => console.error("Ошибка:", error));
+
+    // Прячем кнопки и закрываем pop-up
+    document.querySelectorAll('#popupWindow button').forEach(btn => btn.style.display = 'none');
+    setTimeout(hidePopup, 1500);
+}
+
+// Функции действий кнопки Принять
+function acceptCandidate() {
+    const popupMessage = document.getElementById('popupMessage');
+    popupMessage.textContent = "Вы приняли кандидата.";
+
+    // Находим выделенную строку и берем email кандидата
+    let selectedRow = document.querySelector(".selected-row");
+    let email = selectedRow.cells[1].innerText;  // Email находится во второй ячейке (индекс 1)
+
+    // Отправляем AJAX-запрос на сервер для обновления статуса
+    fetch("/send-accept-email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email })
+    }).then(response => response.json())
+      .then(data => {
+          if (data.message === "Кандидат принят и получил роль автора") {
+              location.reload(); // ✅ Автоматически обновляем страницу
+          }
+      })
+      .catch(error => console.error("Ошибка:", error));
+
+    // Прячем кнопки и закрываем pop-up
+    document.querySelectorAll('#popupWindow button').forEach(btn => btn.style.display = 'none');
+    setTimeout(hidePopup, 1500);
+}
+
+// Функция скрытия окна и оверлея
+function hidePopup() {
+    document.getElementById('popupWindow').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('overlay').onclick = null;
+}
+</script>
+
+</body>
+</html>

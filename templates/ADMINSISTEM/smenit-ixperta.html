@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список экспертов</title>
+    <style>
+         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        /* Кнопка "Назад" */
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+
+        /* Кнопка справа от заголовка */
+        .top-right-button {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .selected-row {
+            background-color: #73b2ec !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+   <!-- Кнопка "Назад" -->
+        <button class="back-button primary-button" onclick="history.back()">Назад</button>
+        <h1 style="text-align:center;">Раздел экспертизы</h1>
+
+        <!-- Основная таблица -->
+        <table id="programsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Номер программы</th>
+                    <th>Название программы</th>
+                    <th>Версия</th>
+                    <th>ФИО автора</th>
+                    <th>ФИО эксперта 1</th>
+                    <th>ФИО эксперта 2</th>
+                    <th>ФИО эксперта 3</th>
+                    <th>Изменение экспертов</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>P001</td>
+                    <td>Программа подготовки инженеров-программистов</td>
+                    <td>v1.0</td>
+                    <td>Иванов Сергей Петрович</td>
+                    <td>Петрова Анна Ивановна</td>
+                    <td>Смирнов Дмитрий Сергеевич</td>
+                    <td>-</td>
+                    <td><button onclick="showPopup(this)">Сменить эксперта</button></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>P002</td>
+                    <td>Курсы повышения квалификации специалистов ИТ-отрасли</td>
+                    <td>v2.1</td>
+                    <td>Антонова Елена Викторовна</td>
+                    <td>Николаев Павел Александрович</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><button onclick="showPopup(this)">Сменить эксперта</button></td>
+                </tr>
+                <!-- Другие строки -->
+            </tbody>
+        </table>
+
+        <!-- Всплывающая форма -->
+        <div class="popup-overlay" id="overlay"></div>
+        <div class="popup" id="popupForm">
+            <h2>Выбор новых экспертов:</h2>
+            <select id="expert1Select">
+                <option value="">Выберите эксперта №1...</option>
+                <option value="Иванова Мария Сергеевна">Иванова Мария Сергеевна</option>
+                <option value="Васин Олег Николаевич">Васин Олег Николаевич</option>
+                <option value="Семенов Петр Алексеевич">Семенов Петр Алексеевич</option>
+            </select>
+            <select id="expert2Select">
+                <option value="">Выберите эксперта №2...</option>
+                <option value="Орлов Андрей Дмитриевич">Орлов Андрей Дмитриевич</option>
+                <option value="Жуков Юрий Михайлович">Жуков Юрий Михайлович</option>
+                <option value="Сергеев Максим Иванович">Сергеев Максим Иванович</option>
+            </select>
+            <select id="expert3Select">
+                <option value="">Выберите эксперта №3...</option>
+                <option value="Козлова Ольга Николаевна">Козлова Ольга Николаевна</option>
+                <option value="Соколова Наталья Владимировна">Соколова Наталья Владимировна</option>
+                <option value="Зотов Александр Евгеньевич">Зотов Александр Евгеньевич</option>
+            </select>
+            <br/>
+            <button onclick="applyChanges()">Применить изменения</button>
+            <button onclick="closePopup()">Закрыть форму</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRow = null;
+
+        function showPopup(buttonElement) {
+            const overlay = document.getElementById('overlay');
+            const popupForm = document.getElementById('popupForm');
+            
+            overlay.style.display = 'block';
+            popupForm.style.display = 'block';
+            
+            // Запоминаем текущую строку
+            currentRow = buttonElement.parentNode.parentNode;
+        }
+
+        function closePopup() {
+            const overlay = document.getElementById('overlay');
+            const popupForm = document.getElementById('popupForm');
+            
+            overlay.style.display = 'none';
+            popupForm.style.display = 'none';
+        }
+
+        function applyChanges() {
+            let expert1 = document.getElementById("expert1Select").value;
+            let expert2 = document.getElementById("expert2Select").value;
+            let expert3 = document.getElementById("expert3Select").value;
+
+            if (!currentRow) return;
+
+            currentRow.cells[5].innerText = expert1 || '-';  // ФИО эксперта 1
+            currentRow.cells[6].innerText = expert2 || '-';  // ФИО эксперта 2
+            currentRow.cells[7].innerText = expert3 || '-';  // ФИО эксперта 3
+
+            closePopup();
+        }
+    </script>
+</body>
+</html>

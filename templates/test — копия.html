@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px; /* Отступ между таблицами */
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="addModule()">Добавить модуль</button>
+<button onclick="addAttestation()">Добавить аттестацию</button>
+
+<div id="tablesContainer"></div>
+
+<script>
+    function addModule() {
+        var container = document.getElementById("tablesContainer");
+        var table = document.createElement("table");
+
+        // Добавляем заголовки столбцов
+        var headerRow = table.insertRow(0);
+        var cell1 = headerRow.insertCell(0);
+        var cell2 = headerRow.insertCell(1);
+        var cell3 = headerRow.insertCell(2);
+        var cell4 = headerRow.insertCell(3);
+        var cell5 = headerRow.insertCell(4);
+        var cell6 = headerRow.insertCell(5);
+        var cell7 = headerRow.insertCell(6);
+
+        cell1.innerHTML = 'Код';
+        cell2.innerHTML = 'Название модуля';
+        cell3.innerHTML = 'лекц.';
+        cell4.innerHTML = 'практ.';
+        cell5.innerHTML = 'дист.';
+        cell6.innerHTML = 'итого';
+        cell7.innerHTML = 'кол-во ауд. дней';
+
+        // Добавляем новую строку с полями для ввода
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+        var cell6 = row.insertCell(5);
+        var cell7 = row.insertCell(6);
+
+        cell1.innerHTML = '<input type="text">';
+        cell2.innerHTML = '<input type="text">';
+        cell3.innerHTML = '<input type="text">';
+        cell4.innerHTML = '<input type="text">';
+        cell5.innerHTML = '<input type="text">';
+        cell6.innerHTML = '<input type="text">';
+        cell7.innerHTML = '<input type="text">';
+
+        container.appendChild(table);
+    }
+
+    function addAttestation() {
+        var container = document.getElementById("tablesContainer");
+        var table = document.createElement("table");
+
+        // Добавляем заголовки столбцов
+        var headerRow = table.insertRow(0);
+        var cell1 = headerRow.insertCell(0);
+        var cell2 = headerRow.insertCell(1);
+        var cell3 = headerRow.insertCell(2);
+        var cell4 = headerRow.insertCell(3);
+        var cell5 = headerRow.insertCell(4);
+        var cell6 = headerRow.insertCell(5);
+
+        cell1.innerHTML = 'Название аттестации';
+        cell2.innerHTML = 'лекц.';
+        cell3.innerHTML = 'практ.';
+        cell4.innerHTML = 'дист.';
+        cell5.innerHTML = 'Форма атт.';
+        cell6.innerHTML = 'итого';
+
+        // Добавляем новую строку с полями для ввода
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+        var cell6 = row.insertCell(5);
+
+        cell1.innerHTML = '<input type="text">';
+        cell2.innerHTML = '<input type="text">';
+        cell3.innerHTML = '<input type="text">';
+        cell4.innerHTML = '<input type="text">';
+        cell5.innerHTML = '<select><option value="Форма атт.">Форма атт.</option><option value="Форма атт. 2">Форма атт. 2</option></select>';
+        cell6.innerHTML = '<input type="text">';
+
+        container.appendChild(table);
+    }
+</script>
+
+</body>
+</html>

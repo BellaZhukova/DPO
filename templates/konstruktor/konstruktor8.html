@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор учебных планов</title>
+    <style>
+        /* Общие настройки */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Основная сетка */
+        .container {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Сайдбар слева */
+        .sidebar {
+            width: 50%;
+            padding: 20px;
+            background-color: #f2f7d7;
+            border-right: 5px solid #ccc;
+        }
+
+        /* Правая часть страницы (лист А4) */
+        .page-container {
+            width: 70%;
+            height: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Листы формата А4 */
+        .page-a4 {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            outline: 4px solid #ccc;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили для таблиц */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        /* Оформление полей ввода */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Форматирование кнопок */
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Фиксированная кнопка внизу справа */
+        .bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        /* Фиксированная кнопка внизу слева */
+        .bottom-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        /* Заголовок блока */
+        .header-block {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf1cb;
+            color: black;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            border: 3px solid #ccc;
+        }
+
+        /* Печать страниц формата А4 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body, html {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container, .sidebar, .bottom-right {
+                display: none !important;
+            }
+
+            .page-container {
+                width: 100%;
+                height: 100%;
+            }
+
+            .page-a4 {
+                outline: none;
+            }
+        }
+        
+textarea {
+    width: 100%;
+    height: auto;       
+    resize: none;       /* Запрет изменения размера руками */
+    overflow-y: hidden; /* Без скролинга */
+    min-height: 100px;  /* Начальная минимальная высота */
+}
+h3{
+text-align:center;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header-block">
+                <h3>Панель редактирования</h3>
+            </div>
+
+            <h3>ФОРМЫ АТТЕСТАЦИИ И ОЦЕНОЧНЫЕ МАТЕРИАЛЫ</h3>
+
+            <!-- Форма для заполнения критериев оценки -->
+            <form id="assessment-form">
+                <label for="requirements">Описание требований к выполнению:</label><br>
+                <textarea id="requirements" rows="4" cols="50"></textarea><br>
+                
+                <label for="criteria">Критерии оценивания:</label><br>
+                <textarea id="criteria" rows="4" cols="50"></textarea><br>
+                
+                <label for="examples">Примеры заданий (2–3 примера):</label><br>
+                <textarea id="examples" rows="4" cols="50"></textarea><br>
+                
+                <label for="attempts">Количество попыток:</label><br>
+                <input type="number" id="attempts"/><br>
+            </form>
+
+            <!-- Кнопка публикации -->
+            <button id="publish-button">Сохранить</button>
+        </div>
+        
+        <div class="page-container">
+            <div class="page-a4">
+                <!-- Лист формата А4 для предпросмотра результата -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Фиксированная кнопка "Назад" -->
+    <div class="bottom-left">
+        <button id="back-button" onclick="history.back()">Назад</button>
+    </div>
+
+    <!-- Фиксированная кнопка "Дальше" -->
+    <div class="bottom-right">
+        <button id="next-button" onclick="goToKonstruktor9Page()">Дальше</button>
+    </div>
+
+    <script>
+document.querySelectorAll('textarea').forEach(textArea => {
+    textArea.addEventListener("input", () => {
+        const computedStyle = window.getComputedStyle(textArea);
+        const lineHeight = parseFloat(computedStyle.lineHeight || 1.2 * textArea.clientHeight / textArea.rows);
+    
+        let newHeight = Math.ceil((textArea.scrollHeight + 10) / lineHeight) * lineHeight;
+    
+        if (newHeight > textArea.offsetHeight) {
+            textArea.style.height = `${newHeight}px`;
+        }
+    });
+});
+const textareas = document.querySelectorAll('textarea');
+
+// Для каждого textarea добавляем обработчик события input
+textareas.forEach(function(textarea) {
+    textarea.addEventListener('input', function() {
+        // Определяем нужную высоту для отображения всех символов
+        this.style.height = '';
+        this.style.height = this.scrollHeight + 'px';
+    });
+});
+    </script>
+	
+</body>
+</html>

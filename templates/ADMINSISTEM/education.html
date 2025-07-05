@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Формы обучения</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="window">
+    <h1>Формы обучения</h1>
+
+    <!-- Таблица для вывода существующих форм обучения -->
+    <table id="educationFormsTable">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Название формы обучения</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Форма для добавления новой формы обучения -->
+    <form id="addEducationForm" style="margin-top: 20px; display: flex; align-items: center;">
+        <input type="text" placeholder="Новая форма обучения..." required />
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+<!-- Поп-ап окно для подтверждения удаления -->
+<div class="popup" id="deletePopup">
+    <p>Вы уверены, что хотите удалить данную форму обучения?</p>
+    <button id="yesBtn">Да</button>
+    <button id="noBtn">Нет</button>
+</div>
+<div class="popup-overlay"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    // Загрузка начальных данных
+    loadData();
+
+    // Обработчик формы добавления новой формы обучения
+    $('#addEducationForm').on('submit', function(event) {
+        event.preventDefault(); // предотвращает перезагрузку страницы
+        let newFormName = $(this).find('input[type="text"]').val().trim();
+        if(newFormName.length > 0){
+            $.ajax({
+                method: "POST",
+                url: "/add-education-form",
+                data: JSON.stringify({ form_name: newFormName }),
+                contentType: "application/json",
+                success: function(response) {
+                    console.log(response.message);
+                    loadData(); // обновляем таблицу после добавления
+                    $('input[type="text"]').val('');
+                },
+                error: function(error) {
+                    alert("Ошибка добавления.");
+                }
+            });
+        }
+    });
+
+    // Назначаем обработчики событий для кнопок "Да" и "Нет" глобально
+    $(document).on('click', '#yesBtn', function() {
+        confirmDelete();
+    });
+
+    $(document).on('click', '#noBtn', function() {
+        closePopup();
+    });
+
+    // Назначаем обработчики двойного клика на строки таблицы
+    $('#educationFormsTable tbody').on('dblclick', 'tr', function() {
+        var formId = $(this).attr('data-id');
+        var formName = $(this).find('td:eq(1)').text();
+        showDeletePopup(formId, formName);
+    });
+
+    // Функция загрузки данных из сервера
+    function loadData(){
+        $.ajax({
+            method: "GET",
+            url: "/get-education-forms",
+            success: function(data) {
+                var tbody = $("#educationFormsTable").find("tbody");
+                tbody.empty();
+                data.forEach((item, index) => {
+                    tbody.append(`
+                        <tr data-id="${item.form_id}">
+                            <td>${index + 1}</td>
+                            <td>${item.form_name}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function(error) {
+                alert("Ошибка загрузки данных.");
+            }
+        });
+    };
+
+    // Показ попапа для удаления
+    function showDeletePopup(formId, formName){
+        $('.popup-overlay').css('display', 'block');
+        $('#deletePopup').css('display', 'block');
+        window.formToRemove = formId;
+        $('#deletePopup p').text(`Вы уверены, что хотите удалить форму обучения "${formName}"?`);
+    }
+
+    // Удаление записи
+    function confirmDelete(){
+        $.ajax({
+            method: "DELETE",
+            url: `/remove-education-form/${window.formToRemove}`,
+            success: function(response) {
+                closePopup();
+                loadData(); // обновляем таблицу после удаления
+            },
+            error: function(error) {
+                alert("Ошибка удаления.");
+            }
+        });
+    }
+
+    // Закрыть попап окна
+    function closePopup(){
+        $('.popup-overlay').css('display', 'none');
+        $('#deletePopup').css('display', 'none');
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cce0ff;
+        }
+        
+        .window {
+            width: 90vw;
+            height: 90vh;
+            background-color: #fff;
+            border: 4px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: scroll;
+            padding: 20px;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        /* Кнопка "Назад" */
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #9c9595;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #73b2ec;
+            cursor: pointer;
+        }
+
+        .selected-row {
+            background-color: #73b2ec !important;
+        }
+
+        .details {
+            display: none;
+            padding-left: 20px;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .no-border-bottom td {
+            border-bottom: none !important;
+        }
+
+        .row-clickable {
+            cursor: pointer;
+        }
+
+        /* Модальное окно */
+        .modal-window {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 1% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Поля формы */
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        fieldset {
+            margin-bottom: 10px;
+        }
+
+        legend {
+            font-weight: bold;
+        }
+
+        /* Кнопки */
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Перекресток закрытия модального окна */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Горизонтальная ориентация чекбоксов */
+        fieldset {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Оформление меток рядом с чекбоксами */
+        label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        /* Чекбоксы чуть меньше стандартных */
+        input[type="checkbox"] {
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* Стили для неотправляемых полей */
+        .readonly-field {
+            background-color: #eee;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Скрытые элементы */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="window">
+    <!-- Кнопка "Назад" -->
+    <button class="back-button primary-button" onclick="history.back()">Назад</button>
+    <h1 style="text-align:center;">Пользователи</h1>
+    <!-- Кнопка "Новый пользователь" -->
+    <button id="new-user-btn" onclick="openNewUserForm()" style="float:right;margin-top: -65px; margin-right: 120px;">Новый пользователь</button>
+    <!-- Кнопка "Архив" -->
+    <button id="archive-btn" onclick="goToArchive()" style="float:right;margin-top: -65px;">Архив</button>
+    <table>
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Учреждение</th>
+                <th>Должность</th>
+                <th>Степень</th>
+                <th>Роли</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="row-clickable" data-user='{"user_id": "{{ user.user_id }}", "last_name":"{{ user.last_name }}", "first_name":"{{ user.first_name }}", "middle_name":"{{ user.middle_name }}", "email":"{{ user.email }}", "phone_number":"{{ user.phone_number }}", "username":"{{ user.username }}", "password":"{{ user.password }}", "institution":"{{ user.institution }}", "position":"{{ user.position }}", "subjects_taught":["{{ user.subjects_taught|join(',') }}"], "academic_degree":"{{ user.academic_degree }}", "roles":["{{ user.roles|join(',') }}"]}'>
+                <td>{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</td>
+                <td>{{ user.institution }}</td>
+                <td>{{ user.position }}</td>
+                <td>{{ user.academic_degree }}</td>
+                <td>{% for role in user.roles %}{{ role }}<br />{% endfor %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Модальное окно -->
+<div id="modal" class="modal-window">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">×</span>
+        <h2 id="modal-title"></h2> 
+        <form id="edit-form">
+            <input type="hidden" name="user_id" value="" />
+            
+            <!-- Логин и пароль скрываются при редактировании -->
+            <div id="login-container" class="hidden">
+                <label>Логин:</label>
+                <input type="text" id="modal-login" placeholder="Введите логин" required />
+            </div>
+            
+            <div id="password-container" class="hidden">
+                <label>Пароль:</label>
+                <input type="password" id="modal-password" placeholder="Введите пароль" required />
+            </div>
+            
+            <label>Фамилия:</label>
+            <input type="text" id="modal-last-name" required/>
+            <label>Имя:</label>
+            <input type="text" id="modal-first-name" required/>
+            <label>Отчество:</label>
+            <input type="text" id="modal-middle-name"/>
+            <label>Учреждение:</label>
+            <input type="text" id="modal-institution" required/>
+            <label>Должность:</label>
+            <input type="text" id="modal-position" required/>
+            <label>Академическая степень:</label>
+            <input type="text" id="modal-academic-degree" required/>
+            <label>Телефон:</label>
+            <input type="text" id="modal-phone-number" required/>
+            <label>Email:</label>
+            <input type="text" id="modal-email" required/>
+            <fieldset style="display: flex; gap: 10px; align-items: center;">
+                <legend>Выбор ролей</legend>
+                <label><input type="checkbox" name="role_admin" id="role-admin" /> Администратор</label>
+                <label><input type="checkbox" name="role_author" id="role-author" /> Автор</label>
+                <label><input type="checkbox" name="role_expert" id="role-expert" /> Эксперт</label>
+            </fieldset>
+        </form>
+        <button id="delete-user-btn" onclick="deleteUser()">Удалить пользователя</button>
+        <button id="move-to-archive-btn" onclick="moveToArchive()">В архив</button>
+        <button id="reset-password-btn" onclick="resetPassword()">Сбросить пароль</button>
+        <button id="save-user-btn" onclick="saveUser()">Сохранить</button>
+        <button id="create-new-user-btn" style="display:none;" onclick="saveNewUser()">Создать пользователя</button>
+    </div>
+</div>
+
+<script>
+    // Переменная для хранения выбранного пользователя
+    let selectedUser = null;
+
+    // Установка состояний чекбоксов в зависимости от ролей пользователя
+    function setCheckboxes(user) {
+        const adminCheckbox = document.getElementById('role-admin');
+        const authorCheckbox = document.getElementById('role-author');
+        const expertCheckbox = document.getElementById('role-expert');
+
+        // Создаем набор из имеющихся ролей пользователя
+        const userRolesSet = new Set(user.roles || []);
+
+        // Проверяем каждую роль и устанавливаем соответствующее состояние чекбокса
+        adminCheckbox.checked = userRolesSet.has('Администратор');
+        authorCheckbox.checked = userRolesSet.has('Автор');
+        expertCheckbox.checked = userRolesSet.has('Эксперт');
+    }
+
+    // Показ модального окна для редактирования пользователя
+    function showModal(user) {
+        selectedUser = user;
+    
+        // Скрываем поля логина и пароля при редактировании
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('password-container').classList.add('hidden');
+    
+        // Остальные поля заполняются значениями пользователя
+        document.getElementById('edit-form').elements['user_id'].value = user.user_id;
+        document.getElementById('modal-last-name').value = user.last_name || '';
+        document.getElementById('modal-first-name').value = user.first_name || '';
+        document.getElementById('modal-middle-name').value = user.middle_name || '';
+        document.getElementById('modal-phone-number').value = user.phone_number || '';
+        document.getElementById('modal-email').value = user.email || '';
+        document.getElementById('modal-institution').value = user.institution || '';
+        document.getElementById('modal-position').value = user.position || '';
+        document.getElementById('modal-academic-degree').value = user.academic_degree || '';
+    
+        // Устанавливаем состояния чекбоксов в зависимости от существующих ролей пользователя
+        setCheckboxes(user);
+    
+        // Настраиваем видимость кнопок и текста модала
+        document.getElementById('modal-title').innerText = 'Редактировать пользователя';
+        document.getElementById('delete-user-btn').style.display = 'inline-block';
+        document.getElementById('move-to-archive-btn').style.display = 'inline-block';
+        document.getElementById('reset-password-btn').style.display = 'inline-block';
+        document.getElementById('save-user-btn').style.display = 'inline-block';
+        document.getElementById('create-new-user-btn').style.display = 'none';
+    
+        // Показываем модальное окно
+        document.getElementById('modal').style.display = 'block';
+    }
+
+    // Открытие формы создания нового пользователя
+    function openNewUserForm() {
+        // Формируем пустую форму для нового пользователя
+        document.getElementById('edit-form').reset();
+    
+        // Показываем поля логина и пароля при создании нового пользователя
+        document.getElementById('login-container').classList.remove('hidden');
+        document.getElementById('password-container').classList.remove('hidden');
+    
+        // Настройка интерфейса модального окна
+        document.getElementById('modal-title').innerText = 'Создать нового пользователя';
+        document.getElementById('delete-user-btn').style.display = 'none';
+        document.getElementById('move-to-archive-btn').style.display = 'none';
+        document.getElementById('reset-password-btn').style.display = 'none';
+        document.getElementById('save-user-btn').style.display = 'none';
+        document.getElementById('create-new-user-btn').style.display = 'inline-block';
+    
+        // Показываем модальное окно
+        document.getElementById('modal').style.display = 'block';
+    }
+
+    // Сохранение данных пользователя
+    async function saveUser() {
+        if (!selectedUser) return;
+
+        // Собираем данные пользователя из формы
+        let updatedData = {
+            user_id: selectedUser.user_id,
+            username: document.getElementById('modal-login').value.trim(),
+            password: '', // Пароль не изменяется при редактировании
+            first_name: document.getElementById('modal-first-name').value.trim(),
+            last_name: document.getElementById('modal-last-name').value.trim(),
+            email: document.getElementById('modal-email').value.trim(),
+            phone_number: document.getElementById('modal-phone-number').value.trim(),
+            institution: document.getElementById('modal-institution').value.trim(),
+            position: document.getElementById('modal-position').value.trim(),
+            academic_degree: document.getElementById('modal-academic-degree').value.trim(),
+            roles: []
+        };
+
+        // Сохраняем выбранные роли
+        if (document.getElementById('role-admin').checked) updatedData.roles.push('Администратор');
+        if (document.getElementById('role-author').checked) updatedData.roles.push('Автор');
+        if (document.getElementById('role-expert').checked) updatedData.roles.push('Эксперт');
+
+        try {
+            await fetch('/update_profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'ok') {
+                    alert("Данные успешно сохранены!");
+                    window.location.reload();
+                } else {
+                    alert("Ошибка при сохранении данных.");
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка при сохранении данных.");
+        }
+    }
+
+    async function deleteUser() {
+        if (!selectedUser) return;
+
+        if (confirm("Вы действительно хотите удалить этого пользователя?")) {
+            try {
+                await fetch(`/users/${selectedUser.user_id}`, {
+                    method: 'DELETE'
+                }).then(response => response.json()).then(data => {
+                    if (data.status === 'ok') {
+                        alert("Пользователь успешно удалён");
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при удалении пользователя");
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка при удалении пользователя");
+            }
+        }
+    }
+
+    // Создание нового пользователя
+    async function saveNewUser() {
+        // Данные из формы
+        let newData = {
+            username: document.getElementById('modal-login').value.trim(),
+            password: document.getElementById('modal-password').value.trim(),
+            first_name: document.getElementById('modal-first-name').value.trim(),
+            last_name: document.getElementById('modal-last-name').value.trim(),
+            email: document.getElementById('modal-email').value.trim(),
+            phone_number: document.getElementById('modal-phone-number').value.trim(),
+            institution: document.getElementById('modal-institution').value.trim(),
+            position: document.getElementById('modal-position').value.trim(),
+            academic_degree: document.getElementById('modal-academic-degree').value.trim(),
+            roles: []
+        };
+
+        // Сбор выбранных ролей
+        if (document.getElementById('role-admin').checked) newData.roles.push('Администратор');
+        if (document.getElementById('role-author').checked) newData.roles.push('Автор');
+        if (document.getElementById('role-expert').checked) newData.roles.push('Эксперт');
+
+        try {
+            await fetch('/create_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newData)
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'ok') {
+                    alert("Новый пользователь успешно создан!");
+                    window.location.reload();
+                } else {
+                    alert("Ошибка при создании пользователя.");
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка при создании пользователя.");
+        }
+    }
+
+    // Привязка обработчиков события кликов по строкам таблицы
+    document.querySelectorAll('.row-clickable').forEach((row) => {
+        row.addEventListener('dblclick', () => {
+            const user = JSON.parse(row.dataset.user);
+            showModal(user);
+        });
+    });
+
+    // Переход в архив
+    function goToArchive() {
+        window.location.href = '/archive';
+    }
+
+    // Обработка закрытия модального окна
+    document.getElementById('modal').addEventListener('click', event => {
+        if (event.target.classList.contains('close')) {
+            closeModal();
+        }
+    });
+
+    // Закрытие модального окна
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    
+    function resetPassword() {
+        // Берём email из модального окна
+        var emailInput = document.getElementById('modal-email').value;
+
+        if (emailInput && emailInput.length > 0) {
+            fetch('/request-reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `email=${encodeURIComponent(emailInput)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    alert("Инструкция по восстановлению пароля отправлена вам на почту.")
+                } else {
+                    alert(data.message)
+                }
+            })
+            .catch(error => {
+                console.error("Ошибка:", error)
+                alert("Возникла ошибка при обработке запроса.")
+            });
+        }
+    }
+
+</script>
+
+</body>
+</html>
