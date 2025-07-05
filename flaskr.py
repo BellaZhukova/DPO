@@ -8,6 +8,7 @@ from flask import Flask, Blueprint, current_app, request, session, g, redirect, 
 from werkzeug.security import check_password_hash  # Безопасное сравнение паролей
 from datetime import datetime, timedelta
 from werkzeug.exceptions import abort
+from pathlib import Path
 
 
 # Создаем экземпляр приложения Flask
@@ -24,6 +25,7 @@ app.config.from_object(__name__)  # Загружаем конфигурацию 
 
 # Соединение с базой данных
 def connect_db():
+    Path(DATABASE).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # Результат будет представлен в виде словаря
     return conn
