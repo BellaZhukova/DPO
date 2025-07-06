@@ -65,7 +65,7 @@ def index():
         cursor = db.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_data = cursor.fetchone()
         
-        if user_data is None or user_data['password'] != password:
+        if user_data is None or user_data['password_hash'] != password:
             error = 'Неверный логин или пароль.'
         else:
             session['logged_in'] = True
