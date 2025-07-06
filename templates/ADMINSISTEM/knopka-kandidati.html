@@ -150,23 +150,27 @@
     </div>
 
 <script>
-// Функция показа всплывающего окна
+
 function showPopup(event, row) {
     event.preventDefault();
     
-    // Выделяем выбранную строку
     let selectedRows = document.querySelectorAll('.selected-row');
-    selectedRows.forEach(row => row.classList.remove('selected-row'));
+    selectedRows.forEach(r => r.classList.remove('selected-row'));
     row.classList.add('selected-row');
 
+    const popupMessage = document.getElementById('popupMessage');
+    popupMessage.textContent = "Принять кандидата в авторы?";
+
+
+    document.querySelectorAll('#popupWindow button').forEach(btn => btn.style.display = '');
     document.getElementById('popupWindow').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
 
-    // Добавляем обработчик клика на оверлей для закрытия popup
     document.getElementById('overlay').onclick = function() {
         hidePopup();
     };
 }
+
 
 // Функции действий кнопки Отклонить
 function declineCandidate() {
@@ -204,7 +208,7 @@ function acceptCandidate() {
 
     // Находим выделенную строку и берем email кандидата
     let selectedRow = document.querySelector(".selected-row");
-    let email = selectedRow.cells[1].innerText;  // Email находится во второй ячейке (индекс 1)
+    let email = selectedRow.cells[1].innerText;
 
     // Отправляем AJAX-запрос на сервер для обновления статуса
     fetch("/send-accept-email", {
@@ -228,9 +232,13 @@ function acceptCandidate() {
 
 // Функция скрытия окна и оверлея
 function hidePopup() {
-    document.getElementById('popupWindow').style.display = 'none';
+    const popup = document.getElementById('popupWindow');
+    popup.style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('overlay').onclick = null;
+    
+    document.getElementById('popupMessage').textContent = "Принять кандидата в авторы?";
+    document.querySelectorAll('#popupWindow button').forEach(btn => btn.style.display = 'block');
 }
 </script>
 

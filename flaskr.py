@@ -26,7 +26,7 @@ app.config.from_object(__name__)  # Загружаем конфигурацию 
 # Соединение с базой данных
 def connect_db():
     Path(DATABASE).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row  # Результат будет представлен в виде словаря
     return conn
 
@@ -60,17 +60,16 @@ def index():
         
         print(f"Пользователь пытается войти с логином: {username}, пароль: {password}")
 
-        # Проверяем введенный логин и пароль
         db = get_db()
         cursor = db.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_data = cursor.fetchone()
         
-        if user_data is None or user_data['password_hash'] != password:
+        if user_data is None or user_data['password'] != password:
             error = 'Неверный логин или пароль.'
         else:
             session['logged_in'] = True
             session['user_id'] = user_data['user_id']
-            return redirect(url_for('vhod_vibor'))  # Перенаправляем на страницу vhodVibor.html
+            return redirect(url_for('vhod_vibor'))
     
     return render_template('index.html', error=error)
 
@@ -243,11 +242,9 @@ def rekomendacii():
 @app.route('/show-candidates')
 def show_candidates():
     try:
-        # Подключение к базе данных
-        conn = sqlite3.connect('database.db')
+        conn = connect_db()
         cursor = conn.cursor()
         
-        # Выборка всех пользователей из базы данных
         cursor.execute('''
             SELECT first_name, last_name, middle_name, email, phone_number, institution, position, subjects_taught, academic_degree, academic_rank 
             FROM users 
@@ -258,17 +255,14 @@ def show_candidates():
     
         print("Полученные данные:", results)
 
-         # Нормализация данных и замена пустых значений на "не указано"
         candidates = []
         for result in results:
-            # Устанавливаем разумные значения по умолчанию
             default_values = ['не указано'] * 10
             processed_result = list(result[:len(default_values)])
             for i in range(len(processed_result)):
                 if processed_result[i] is None:
                     processed_result[i] = default_values[i]
 
-            # Создаем полноценный объект кандидата
             candidates.append({
                 'full_name': f"{processed_result[0]} {processed_result[1]} {processed_result[2]}",
                 'email': processed_result[3],
@@ -278,7 +272,7 @@ def show_candidates():
                 'subjects_taught': processed_result[7],
                 'academic_degree': processed_result[8],
                 'academic_rank': processed_result[9]
-            })# Конвертирование результатов в удобный формат
+            })
             
         
         return render_template('ADMINSISTEM/knopka-kandidati.html', candidates=candidates)
@@ -338,15 +332,20 @@ def send_decline_email_route():
     
 def send_acceptance_email(email_address):
     sender_email = "kirilll.nikitin2017@mail.ru"   # ВАЖНО! Укажите свою реальную почту
-    receiver_email = email_address                 # Адрес получателя (он приходит из запроса)
+    receiver_email = email_address
+    # Добавляем email как параметр в URL
+    registration_link = f"http://127.0.0.1:5000/end_register?email={email_address}"
     subject = "Поздравляем! Вы приняты!"
-    message_body = """
-    Уважаемый кандидат!
-    
-    Мы рады сообщить Вам, что Ваша заявка одобрена и теперь Вы являетесь автором нашей платформы.
-    
-    С уважением,
-    Команда нашего сайта
+    message_body = f"""
+        Уважаемый кандидат!
+        
+        Мы рады сообщить Вам, что Ваша заявка одобрена и теперь Вы являетесь автором нашей платформы.
+        
+        Для завершения регистрации перейдите по ссылке:
+        {registration_link}
+        
+        С уважением,
+        Команда нашего сайта
     """
 
     # Формирование письма
@@ -384,6 +383,36 @@ def send_accept_email_route():
     else:
         return jsonify({"error": "Адрес электронной почты отсутствует"}), 400
 
+@app.route('/end_register', methods=['GET', 'POST'])
+def end_register():
+    email = request.args.get('email') or request.form.get('email')
+    if request.method == 'POST':
+        username = request.form.get('username_register')
+        password = request.form.get('password_register')
+
+        print(f"{email}")
+        
+
+        if not email:  # Если email не передан
+            return "Ошибка: email не указан", 400
+        # Здесь должна быть логика проверки и создания пользователя
+        # Например:
+        db = get_db()
+        user = db.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+        
+        if user and user['role_author']:  # Проверяем, что пользователь одобрен как автор
+            # Хешируем пароль и сохраняем логин
+            password = password
+            db.execute(
+                "UPDATE users SET username = ?, password = ? WHERE email = ?",
+                (username, password, email)
+            )
+            db.commit()
+            return redirect(url_for('index'))  # Или другая страница
+        
+    return render_template('end_register.html')
 
 def send_reset_email(email_address, token):
     sender_email = "kirilll.nikitin2017@mail.ru"  # Используем существующий аккаунт
@@ -651,7 +680,7 @@ def createInstitution():
 # Маршрут для получения всех учреждений из БД
 @app.route('/api/get_all_institutions', methods=['GET'])  # Изменили имя пути
 def get_all_institutions():                             # Изменили имя функции
-    conn = sqlite3.connect(DATABASE)
+    conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM institutions")
     rows = cursor.fetchall()

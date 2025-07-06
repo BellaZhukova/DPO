@@ -5,7 +5,7 @@ DATABASE_PATH = r'C:\FLASK\DPO PORTAL\database.db'
 
 def connect_to_db():
     try:
-        connection = sqlite3.connect(DATABASE_PATH)
+        connection = sqlite3.connect('database.db')
         print("База данных открыта успешно.")
         return connection
     except sqlite3.Error as e:
