@@ -132,28 +132,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Обновление данных при публикации
     function updateDataForPublish() {
         let finalInstitutionValue;
 
-        // Если выбрано "Иное", используем введённое пользователем значение
         if (institutionSelect.value === 'other') {
             finalInstitutionValue = customInstitutionInput.value.trim();
         } else {
-            // Используем полное название выбранного учреждения
             finalInstitutionValue = institutionSelect.options[institutionSelect.selectedIndex].dataset.fullName;
         }
 
-        // Печатаем на странице А4
         institutionOutput.textContent = finalInstitutionValue;
         programOutput.textContent = programNameInput.value;
     }
 
-    // Присоединяем обработчик события к кнопке "Сохранить"
     publishButton.addEventListener('click', updateDataForPublish);
 });
 
-// Переход на следующую страницу
 function goToKonstruktor3Page() {
     window.location.href = "{{ url_for('konstruktor3_page') }}";
 }

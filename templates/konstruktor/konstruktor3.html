@@ -79,15 +79,11 @@
                 <ul class="experts-list">
                     <li class="expert-item">
                         Эксперт 1:<br/>
-                        Иван Петров, старший преподаватель, Московский государственный университет, дата экспертизы: 10.03.2025, подпись: ___________
+                        <span id="expert1-info"></span>
                     </li>
                     <li class="expert-item">
                         Эксперт 2:<br/>
-                        Анна Иванова, доцент, Институт образования Калининграда, дата экспертизы: 15.03.2025, подпись: ___________
-                    </li>
-                    <li class="expert-item">
-                        Эксперт 3:<br/>
-                        Сергей Смирнов, профессор, Санкт-Петербургский педагогический колледж, дата экспертизы: 20.03.2025, подпись: ___________
+                        <span id="expert2-info"></span>
                     </li>
                 </ul>
 
@@ -111,20 +107,119 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+// Глобальная переменная для хранения данных авторов
+let authorsData = [];
+
+// Функция для получения авторов с сервера
+async function getAuthors() {
+    try {
+        const response = await fetch('/get_authors');
+        if (!response.ok) throw new Error('Ошибка при получении авторов');
+        authorsData = await response.json();
+        populateAuthorSelects();
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось загрузить список авторов');
+    }
+}
+
+// Функция для заполнения выпадающих списков авторов
+function populateAuthorSelects() {
+    const authorSelect = document.getElementById('author-select');
+    const secondAuthorSelect = document.getElementById('second-author-select');
+    
+    // Очищаем существующие опции (кроме первой)
+    while (authorSelect.options.length > 1) authorSelect.remove(1);
+    while (secondAuthorSelect.options.length > 1) secondAuthorSelect.remove(1);
+    
+    // Добавляем новых авторов
+    authorsData.forEach(author => {
+        const option1 = new Option(author.value, author.value);
+        const option2 = new Option(author.value, author.value);
+        
+        authorSelect.add(option1);
+        secondAuthorSelect.add(option2);
+    });
+}
+
+// Функция для получения полной информации об авторе по имени
+function getAuthorInfo(fullName) {
+    return authorsData.find(author => author.value === fullName)?.data || null;
+}
+
+// Функция для форматирования даты
+function getCurrentDate() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+
+// Функция для обновления информации об экспертах
+function updateExpertsInfo() {
+    const firstAuthor = document.getElementById('author-select').value;
+    const secondAuthor = document.getElementById('second-author-select').value;
+    
+    const expert1Info = document.getElementById('expert1-info');
+    const expert2Info = document.getElementById('expert2-info');
+    
+    if (firstAuthor) {
+        const authorData = getAuthorInfo(firstAuthor);
+        if (authorData) {
+            expert1Info.textContent = `${firstAuthor}, ${authorData.position}, ${authorData.institution}, дата экспертизы: ${getCurrentDate()}, подпись: ___________`;
+        }
+    }
+    
+    if (secondAuthor) {
+        const authorData = getAuthorInfo(secondAuthor);
+        if (authorData) {
+            expert2Info.textContent = `${secondAuthor}, ${authorData.position}, ${authorData.institution}, дата экспертизы: ${getCurrentDate()}, подпись: ___________`;
+        }
+    }
+}
+
+// Основная функция при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    $.ajax({
-        type: 'GET',
-        url: '/get_authors',
-        success: function(response) {
-            let selectElements = $('#author-select, #second-author-select');
-            response.forEach(author => {
-                selectElements.each(function() {
-                    $(this).append($(`<option value="${author.value}">${author.value}</option>`));
-                });
+    // Загружаем авторов
+    getAuthors();
+    
+    // Назначаем обработчики событий для select элементов
+    document.getElementById('author-select').addEventListener('change', function() {
+        const selectedValue = this.value;
+        document.getElementById('first-coauthor-info').textContent = selectedValue || '';
+        updateExpertsInfo();
+    });
+    
+    document.getElementById('second-author-select').addEventListener('change', function() {
+        const selectedValue = this.value;
+        document.getElementById('second-coauthor-info').textContent = selectedValue || '';
+        updateExpertsInfo();
+    });
+    
+    // Обработчик для кнопки "Сохранить"
+    document.getElementById('publish-button').addEventListener('click', async function() {
+        const firstAuthor = document.getElementById('author-select').value;
+        const secondAuthor = document.getElementById('second-author-select').value;
+        
+        try {
+            const response = await fetch('/save_authors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    first_coauthor: firstAuthor,
+                    second_coauthor: secondAuthor
+                })
             });
-        },
-        error: function(error) {
-            console.error("Error fetching authors:", error);
+            
+            if (!response.ok) throw new Error('Ошибка при сохранении');
+            
+            alert('Данные успешно сохранены');
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка при сохранении данных');
         }
     });
 });
@@ -132,46 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function goToKonstruktor4Page() {
     window.location.href = "{{ url_for('konstruktor4_page') }}";
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Получаем нужные элементы
-    const authorSelect = document.getElementById('author-select');
-    const secondAuthorSelect = document.getElementById('second-author-select');
-    const firstCoauthorInfo = document.getElementById('first-coauthor-info');
-    const secondCoauthorInfo = document.getElementById('second-coauthor-info');
-    const publishButton = document.getElementById('publish-button');
-
-    // Назначаем событие на кнопку "Сохранить"
-    publishButton.addEventListener('click', async () => {
-        // Собираем данные авторов
-        const selectedFirstAuthor = authorSelect.value.trim();
-        const selectedSecondAuthor = secondAuthorSelect.value.trim();
-
-        // Формируем объект для отправки на сервер
-        const payload = {
-            first_coauthor: selectedFirstAuthor,
-            second_coauthor: selectedSecondAuthor
-        };
-
-        // Отправляем POST-запрос на сервер
-        await fetch('/save_authors', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        }).then(response => {
-            if (!response.ok) throw new Error('Ошибка при сохранении авторов.');
-            return response.json(); // Ждем ответ от сервера
-        }).then(data => {
-            // Обновляем UI, если нужно
-            firstCoauthorInfo.innerText = selectedFirstAuthor;
-            secondCoauthorInfo.innerText = selectedSecondAuthor;
-        }).catch(err => {
-            alert('Ошибка при сохранении авторов:' + err.message);
-        });
-    });
-});
 </script>
 
 </body>
