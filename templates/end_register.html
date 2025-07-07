@@ -238,7 +238,7 @@
             </header>
             
             <section class="login-form">
-                <form action="/end_register" method="POST">
+                <form action="/end_register" method="POST" onsubmit="return validatePassword()">
                     <input type="hidden" name="email" value="{{ request.args.get('email', '') }}">
                     <div class="input-container">
                         <label for="username_register">Логин:</label>
@@ -247,13 +247,17 @@
                     <div class="input-container">
                         <label for="password_register">Пароль:</label>
                         <input type="password" id="password_register" name="password_register" placeholder="Ваш пароль" required>
+                        <small id="passwordHelp" style="display: none; color: red;">
+                            Пароль должен содержать: не менее 8 символов, заглавные и строчные буквы, цифры и спецсимволы (!@#$% и т.д.)
+                        </small>
                     </div>
                     <div class="input-container">
                         <label for="confirm_password">Повторите пароль:</label>
                         <input type="password" id="confirm_password" name="confirm_password" placeholder="Повторите пароль" required>
+                        <small id="confirmHelp" style="display: none; color: red;">Пароли не совпадают</small>
                     </div>
 
-                     <!-- Сообщение об ошибке -->
+                    <!-- Сообщение об ошибке -->
                     {% if error %}
                     <p style="color: red; margin-top: -5px; margin-bottom: -13px;">{{ error }}</p>
                     {% endif %}
@@ -279,4 +283,29 @@
         </div>
     </div>
 </body>
+<script>
+    function validatePassword() {
+        const password = document.getElementById('password_register').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const passwordHelp = document.getElementById('passwordHelp');
+        const confirmHelp = document.getElementById('confirmHelp');
+        
+        passwordHelp.style.display = 'none';
+        confirmHelp.style.display = 'none';
+        
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+        
+        if (!passwordRegex.test(password)) {
+            passwordHelp.style.display = 'block';
+            return false;
+        }
+        
+        if (password !== confirmPassword) {
+            confirmHelp.style.display = 'block';
+            return false;
+        }
+        
+        return true;
+    }
+</script>
 </html>
