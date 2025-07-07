@@ -334,7 +334,7 @@ def send_acceptance_email(email_address):
     sender_email = "kirilll.nikitin2017@mail.ru"   # ВАЖНО! Укажите свою реальную почту
     receiver_email = email_address
     # Добавляем email как параметр в URL
-    registration_link = f"http://127.0.0.1:5000/end_register?email={email_address}"
+    registration_link = url_for('end_register', email=email_address, _external=True)
     subject = "Поздравляем! Вы приняты!"
     message_body = f"""
         Уважаемый кандидат!
@@ -343,6 +343,7 @@ def send_acceptance_email(email_address):
         
         Для завершения регистрации перейдите по ссылке:
         {registration_link}
+
         
         С уважением,
         Команда нашего сайта
@@ -393,30 +394,28 @@ def end_register():
         print(f"{email}")
         
 
-        if not email:  # Если email не передан
+        if not email:
             return "Ошибка: email не указан", 400
-        # Здесь должна быть логика проверки и создания пользователя
-        # Например:
+
         db = get_db()
         user = db.execute(
             "SELECT * FROM users WHERE email = ?", (email,)
         ).fetchone()
         
-        if user and user['role_author']:  # Проверяем, что пользователь одобрен как автор
-            # Хешируем пароль и сохраняем логин
+        if user and user['role_author']:
             password = password
             db.execute(
                 "UPDATE users SET username = ?, password = ? WHERE email = ?",
                 (username, password, email)
             )
             db.commit()
-            return redirect(url_for('index'))  # Или другая страница
+            return redirect(url_for('index'))
         
     return render_template('end_register.html')
 
 def send_reset_email(email_address, token):
-    sender_email = "kirilll.nikitin2017@mail.ru"  # Используем существующий аккаунт
-    receiver_email = email_address  # Получатель — адрес пользователя
+    sender_email = "kirilll.nikitin2017@mail.ru" 
+    receiver_email = email_address
     subject = "Сброс пароля на вашем аккаунте"
     message_body = f"""\
     Уважаемый пользователь!
@@ -431,7 +430,6 @@ def send_reset_email(email_address, token):
     Администрация портала
     """
 
-    # Формирование письма
     msg = EmailMessage()
     msg.set_content(message_body)
     msg["Subject"] = subject
