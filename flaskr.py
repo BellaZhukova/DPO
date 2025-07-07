@@ -339,14 +339,12 @@ def send_reset_email(email_address):
     Администрация портала
     """
 
-    # Формирование письма
     msg = EmailMessage()
     msg.set_content(message_body)
     msg["Subject"] = subject
     msg["From"] = sender_email
     msg["To"] = receiver_email
 
-    # Отправка письма через Mail.ru с SSL/TLS
     with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
         server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # Используем пароль от действующего аккаунта
         server.send_message(msg)
@@ -408,13 +406,10 @@ def send_decline_email_route():
     recipient_email = data.get("email")
     
     if recipient_email:
-        # Сначала отправляем уведомление кандидату
         send_declination_email(recipient_email)
         
-        # Затем получаем соединение с базой данных
         db = get_db()
         
-        # Удаляем запись кандидата из базы данных по email
         db.execute(
             "DELETE FROM users WHERE email=?",
             (recipient_email,)
@@ -444,16 +439,14 @@ def send_acceptance_email(email_address):
         Команда нашего сайта
     """
 
-    # Формирование письма
     msg = EmailMessage()
     msg.set_content(message_body)
     msg["Subject"] = subject
     msg["From"] = sender_email
     msg["To"] = receiver_email
 
-    # Отправка письма через Mail.ru с SSL/TLS
     with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
-        server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # ВАЖНО! Используйте реальный пароль своей почты
+        server.login(sender_email, "FR6K9bicQTqds6soRfcG")
         server.send_message(msg)
 
     print(f"Сообщение отправлено на {receiver_email}.")
@@ -464,10 +457,9 @@ def send_accept_email_route():
     recipient_email = data.get("email")
     
     if recipient_email:
-        # Отправляем письмо кандидату о принятии
+        
         send_acceptance_email(recipient_email)
         
-        # Обновляем роль кандидата в базе данных
         db = get_db()
         db.execute(
             "UPDATE users SET role_author=TRUE WHERE email=?",
@@ -513,43 +505,8 @@ def end_register():
     return render_template('end_register.html')
 
 
-# @app.route('/reset_password/<token>')
-# def reset_password_page(token):
-#     return render_template('ADMINSISTEM/reset_password.html', token=token)
-
-# def send_reset_email(email_address, token):
-#     sender_email = "kirilll.nikitin2017@mail.ru" 
-#     receiver_email = email_address
-#     subject = "Сброс пароля на вашем аккаунте"
-#     message_body = f"""\
-#     Уважаемый пользователь!
-
-#     Вы запросили сброс пароля. Для завершения процедуры сброса пароля перейдите по следующей ссылке:
-
-#     {url_for('reset_password', token=token, _external=True)}
-
-#     Если вы не запрашивали сброс пароля, просто проигнорируйте данное письмо.
-
-#     С уважением,
-#     Администрация портала
-#     """
-
-#     msg = EmailMessage()
-#     msg.set_content(message_body)
-#     msg["Subject"] = subject
-#     msg["From"] = sender_email
-#     msg["To"] = receiver_email
-
-#     # Отправка письма через Mail.ru с SSL/TLS
-#     with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
-#         server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # Используем пароль от действующего аккаунта
-#         server.send_message(msg)
-
-#     print(f"Сообщение отправлено на {receiver_email}.")
-
 
 def update_user_password(user_id, new_password):
-    # Получаем соединение с базой данных
     db = get_db()
     cursor = db.cursor()
     cursor.execute("UPDATE users SET password=? WHERE id=?", (generate_password_hash(new_password), user_id))
@@ -562,18 +519,12 @@ def edit_profile():
     last_name = request.form.get('last_name')
     email = request.form.get('email')
 
-    # Обновляем данные пользователя
     db = get_db()
     cursor = db.cursor()
     cursor.execute("UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?", (first_name, last_name, email, user_id))
     db.commit()
     return "Профиль успешно обновлён."
 
-
-# @app.route('/reset-password/<string:token>', methods=['GET'])
-# def reset_password(token):
-#     # Здесь логика проверки валидности токена и отображения страницы смены пароля
-#     return render_template('reset_password.html')
 
 # СТРАНИЦА ПОЛЬЗОВАТЕЛИ
 @app.route('/polzovateli')
