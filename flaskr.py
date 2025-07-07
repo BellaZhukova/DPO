@@ -5,11 +5,11 @@ import json
 import secrets
 from email.message import EmailMessage
 from flask import Flask, Blueprint, current_app, request, session, g, redirect, url_for, render_template, flash, jsonify
-from werkzeug.security import check_password_hash  # Безопасное сравнение паролей
 from datetime import datetime, timedelta
 from werkzeug.exceptions import abort
 from pathlib import Path
 from itsdangerous import URLSafeTimedSerializer
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # Создаем экземпляр приложения Flask
@@ -50,6 +50,9 @@ def init_db():
 # Инициализация базы данных при первом запуске
 init_db()
 
+def hash_password(password):
+    return generate_password_hash(password)
+
 # Главная страница + обработка формы
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -64,7 +67,7 @@ def index():
         cursor = db.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_data = cursor.fetchone()
         
-        if user_data is None or user_data['password'] != password:
+        if user_data is None or not check_password_hash(user_data['password'], password):
             error = 'Неверный логин или пароль.'
         else:
             session['logged_in'] = True
@@ -383,7 +386,7 @@ def update_password():
 
         db = get_db()
         cursor = db.cursor()
-        hashed_password = new_password
+        hashed_password = generate_password_hash(new_password)
         cursor.execute("""
             UPDATE users 
             SET username = ?, password = ?
@@ -494,10 +497,10 @@ def end_register():
         ).fetchone()
         
         if user and user['role_author']:
-            password = password
+            hashed_password = generate_password_hash(password)
             db.execute(
                 "UPDATE users SET username = ?, password = ? WHERE email = ?",
-                (username, password, email)
+                (username, hashed_password, email)
             )
             db.commit()
             return redirect(url_for('index'))
@@ -643,11 +646,12 @@ def create_user():
     # Подготавливаем запрос на вставку
     db = get_db()
     cursor = db.cursor()
+    hashed_password = generate_password_hash(password)
     cursor.execute('''
         INSERT INTO users (
             username, password, first_name, last_name, email, phone_number, institution, position, academic_degree
         ) VALUES (?,?,?,?,?,?,?,?,?)
-    ''', (username, password, first_name, last_name, email, phone_number, institution, position, academic_degree))
+    ''', (username, hashed_password, first_name, last_name, email, phone_number, institution, position, academic_degree))
 
     # Установим роли отдельно
     for role in roles:
