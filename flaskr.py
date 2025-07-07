@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash  # Безопасное сра
 from datetime import datetime, timedelta
 from werkzeug.exceptions import abort
 from pathlib import Path
+from itsdangerous import URLSafeTimedSerializer
 
 
 # Создаем экземпляр приложения Flask
@@ -22,6 +23,7 @@ DEBUG = True                 # Включаем режим отладки
 SECRET_KEY = 'development key'  # Секретный ключ для сессии
 
 app.config.from_object(__name__)  # Загружаем конфигурацию из этого файла
+app.config['SECRET_KEY'] = 'ваш_случайный_секретный_ключ_здесь'
 
 # Соединение с базой данных
 def connect_db():
@@ -47,8 +49,6 @@ def init_db():
 
 # Инициализация базы данных при первом запуске
 init_db()
-
-
 
 # Главная страница + обработка формы
 @app.route('/', methods=['GET', 'POST'])
@@ -307,6 +307,101 @@ def send_declination_email(email_address):
 
     print(f"Сообщение отправлено на {receiver_email}.")
 
+
+#СМЕНА ПАРОЛЯ
+
+def generate_reset_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='password-reset-salt')
+
+@app.route('/reset_password/<token>')
+def reset_password_page(token):
+    return render_template('ADMINSISTEM/reset_password.html', token=token)
+
+def send_reset_email(email_address):
+    sender_email = "kirilll.nikitin2017@mail.ru"  
+    receiver_email = email_address             
+    subject = "Заявка на смену пароля"
+    
+    token = generate_reset_token(email_address)
+    reset_url = url_for('reset_password_page', token=token, _external=True)
+    
+    message_body = f"""\
+    Уважаемый пользователь!
+
+    Вы запросили сброс пароля. Для завершения процедуры сброса пароля перейдите по следующей ссылке:
+
+    {reset_url}
+
+    Если вы не запрашивали сброс пароля, просто проигнорируйте данное письмо.
+
+    С уважением,
+    Администрация портала
+    """
+
+    # Формирование письма
+    msg = EmailMessage()
+    msg.set_content(message_body)
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+
+    # Отправка письма через Mail.ru с SSL/TLS
+    with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
+        server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # Используем пароль от действующего аккаунта
+        server.send_message(msg)
+
+    print(f"Password reset message sent to {receiver_email}.")
+
+@app.route('/request-reset', methods=['POST'])
+def request_reset():
+    email = request.form.get('email')
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT user_id FROM users WHERE email=?", (email,))
+    user = cursor.fetchone()
+
+    if user:
+        token = generate_reset_token(email)
+        send_reset_email(email)
+        return jsonify({"status": "ok"})
+    else:
+        return jsonify({"status": "error", "message": "Email не найден"}), 400
+
+@app.route('/update_password', methods=['POST'])
+def update_password():
+    token = request.form.get('token')
+    new_login = request.form.get('new_login')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    if new_password != confirm_password:
+        flash("Пароли не совпадают!", 'error')
+        return redirect(url_for('reset_password_page', token=token))
+
+    try:
+        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
+
+        db = get_db()
+        cursor = db.cursor()
+        hashed_password = new_password
+        cursor.execute("""
+            UPDATE users 
+            SET username = ?, password = ?
+            WHERE email = ?
+        """, (new_login, hashed_password, email))
+        db.commit()
+
+        flash("Пароль успешно изменён! Теперь вы можете войти с новым паролем.", 'success')
+        return redirect(url_for('index'))
+
+    except Exception as e:
+        app.logger.error(f"Error processing password reset token: {str(e)}")
+        flash("Неверная или устаревшая ссылка. Запросите сброс пароля снова.", 'error')
+        return redirect(url_for('reset_password_page', token=token))
+    
+
 @app.route('/send-decline-email', methods=['POST'])
 def send_decline_email_route():
     data = request.get_json()
@@ -384,14 +479,18 @@ def send_accept_email_route():
     else:
         return jsonify({"error": "Адрес электронной почты отсутствует"}), 400
 
+
 @app.route('/end_register', methods=['GET', 'POST'])
 def end_register():
     email = request.args.get('email') or request.form.get('email')
     if request.method == 'POST':
         username = request.form.get('username_register')
         password = request.form.get('password_register')
+        confirm_password = request.form.get('confirm_password')
 
-        print(f"{email}")
+        if password != confirm_password:
+            flash("Пароли не совпадают!", 'error')
+            return redirect(url_for('end_register', email=email))
         
 
         if not email:
@@ -413,40 +512,41 @@ def end_register():
         
     return render_template('end_register.html')
 
-def send_reset_email(email_address, token):
-    sender_email = "kirilll.nikitin2017@mail.ru" 
-    receiver_email = email_address
-    subject = "Сброс пароля на вашем аккаунте"
-    message_body = f"""\
-    Уважаемый пользователь!
 
-    Вы запросили сброс пароля. Для завершения процедуры сброса пароля перейдите по следующей ссылке:
+# @app.route('/reset_password/<token>')
+# def reset_password_page(token):
+#     return render_template('ADMINSISTEM/reset_password.html', token=token)
 
-    {url_for('reset_password', token=token, _external=True)}
+# def send_reset_email(email_address, token):
+#     sender_email = "kirilll.nikitin2017@mail.ru" 
+#     receiver_email = email_address
+#     subject = "Сброс пароля на вашем аккаунте"
+#     message_body = f"""\
+#     Уважаемый пользователь!
 
-    Если вы не запрашивали сброс пароля, просто проигнорируйте данное письмо.
+#     Вы запросили сброс пароля. Для завершения процедуры сброса пароля перейдите по следующей ссылке:
 
-    С уважением,
-    Администрация портала
-    """
+#     {url_for('reset_password', token=token, _external=True)}
 
-    msg = EmailMessage()
-    msg.set_content(message_body)
-    msg["Subject"] = subject
-    msg["From"] = sender_email
-    msg["To"] = receiver_email
+#     Если вы не запрашивали сброс пароля, просто проигнорируйте данное письмо.
 
-    # Отправка письма через Mail.ru с SSL/TLS
-    with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
-        server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # Используем пароль от действующего аккаунта
-        server.send_message(msg)
+#     С уважением,
+#     Администрация портала
+#     """
 
-    print(f"Сообщение отправлено на {receiver_email}.")
+#     msg = EmailMessage()
+#     msg.set_content(message_body)
+#     msg["Subject"] = subject
+#     msg["From"] = sender_email
+#     msg["To"] = receiver_email
 
-def generate_reset_token():
-    token = secrets.token_hex(32)  # Генерируем случайный токен
-    expires_at = datetime.utcnow() + timedelta(hours=1)  # Срок действия токена — 1 час
-    return token, expires_at
+#     # Отправка письма через Mail.ru с SSL/TLS
+#     with smtplib.SMTP_SSL('smtp.mail.ru', 465) as server:
+#         server.login(sender_email, "FR6K9bicQTqds6soRfcG")  # Используем пароль от действующего аккаунта
+#         server.send_message(msg)
+
+#     print(f"Сообщение отправлено на {receiver_email}.")
+
 
 def update_user_password(user_id, new_password):
     # Получаем соединение с базой данных
@@ -454,24 +554,6 @@ def update_user_password(user_id, new_password):
     cursor = db.cursor()
     cursor.execute("UPDATE users SET password=? WHERE id=?", (generate_password_hash(new_password), user_id))
     db.commit()
-
-@app.route('/request-reset', methods=['POST'])
-def request_reset():
-    email = request.form.get('email')
-    # Проверяем наличие пользователя с данным email
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT user_id FROM users WHERE email=?", (email,))  # Используем правильный идентификатор пользователя
-    user = cursor.fetchone()
-
-    if user:
-        # Генерируем токен и отправляем письмо
-        token, _ = generate_reset_token()
-        send_reset_email(email, token)
-        return jsonify({"status": "ok"})
-    else:
-        return jsonify({"status": "error", "message": "Пользователь с указанным email не зарегистрирован."}), 400
-
 
 @app.route('/edit-profile', methods=['POST'])
 def edit_profile():
@@ -488,10 +570,10 @@ def edit_profile():
     return "Профиль успешно обновлён."
 
 
-@app.route('/reset-password/<string:token>', methods=['GET'])
-def reset_password(token):
-    # Здесь логика проверки валидности токена и отображения страницы смены пароля
-    return render_template('reset_password.html')
+# @app.route('/reset-password/<string:token>', methods=['GET'])
+# def reset_password(token):
+#     # Здесь логика проверки валидности токена и отображения страницы смены пароля
+#     return render_template('reset_password.html')
 
 # СТРАНИЦА ПОЛЬЗОВАТЕЛИ
 @app.route('/polzovateli')
@@ -772,10 +854,6 @@ def bulk_get_actions():
     )
 
     return jsonify([dict(a) for a in actions])
-
-
-
-
 
 
 @app.route('/obazanosti')
