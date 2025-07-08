@@ -53,6 +53,7 @@ init_db()
 def hash_password(password):
     return generate_password_hash(password)
 
+
 # Главная страница + обработка формы
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -60,20 +61,20 @@ def index():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         print(f"Пользователь пытается войти с логином: {username}, пароль: {password}")
 
         db = get_db()
         cursor = db.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_data = cursor.fetchone()
-        
-        if user_data is None or not check_password_hash(user_data['password'], password):
+
+        if user_data is None or not check_password_hash(user_data['password_hash'], password):
             error = 'Неверный логин или пароль.'
         else:
             session['logged_in'] = True
             session['user_id'] = user_data['user_id']
             return redirect(url_for('vhod_vibor'))
-    
+
     return render_template('index.html', error=error)
 
 @app.before_request
