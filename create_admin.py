@@ -5,17 +5,17 @@ def create_admin_user():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    username = 'admin'
+    username = 'admin1'
     password = '12345'  # Замените на нужный пароль
     hashed_password = generate_password_hash(password)
 
     first_name = 'Admin'
     last_name = 'User'
-    email = 'admin19@example.com'
+    email = 'rosaru1@mail.ru'
 
     # Пример вставки пользователя с ролью администратора
     cursor.execute('''
-        INSERT INTO users (username, password, first_name, last_name, email, role_admin)
+        INSERT INTO users (username, password_hash, first_name, last_name, email, role_admin)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (username, hashed_password, first_name, last_name, email, True))
 
