@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Конструктор документов</title>
@@ -23,6 +22,19 @@
             background-color: #0056b3;
         }
 
+        .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 0 20px 0 20px;
+        }
+
+        .inner-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
         /* Контейнеры для кнопок */
         .bottom-left {
             position: fixed;
@@ -35,6 +47,10 @@
             bottom: 20px;
             right: 20px;
         }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -46,37 +62,32 @@
         </div>
         <h4>ТИТУЛЬНЫЙ ЛИСТ ПРОГРАММЫ</h4>
         
-        <!-- Заголовок титульного листа -->
         <label for="institution-select">Заголовок титульного листа:</label><br />
         <select id="institution-select" class="form-element">
             <option value="">Выберите учреждение</option>
-            <!-- Данные учреждений будут подгружены динамически -->
         </select>
         
-        <!-- Поле для ввода произвольного учреждения (скрывается изначально) -->
         <div id="custom-institution-div" class="hidden">
             <label for="custom-institution">Ваше учреждение:</label><br />
             <input type="text" id="custom-institution" class="form-element" placeholder="Введите наименование учреждения"><br /><br />
         </div>
         
-        <!-- Название программы -->
         <label for="program-name">Название программы:</label><br />
         <input type="text" id="program-name" class="form-element" placeholder="Введите название программы"><br /><br />
         
-        <!-- Кнопка публикации -->
         <button id="publish-button">Сохранить</button>
     </div>
     
     <div class="page-container">
         <div class="page-a4">
             <div class="inner-page">
-                <h1 id="institution-output-new"></h1>
-                <h2 id="program-output-new"></h2>
-                
-                <!-- Номер страницы внизу -->
-                <div class="footer-info">
-                    <span>Калининград<br/>2025</span>
+                <h1 class="title" id="institution-output-new"></h1>
+                <div style="text-align: center;">
+                    <span>Дополнительная профессиональная программа повышения квалификации</span><br/>
+                    <span id="program-output-new"></span>
                 </div>
+                <span style="text-align: right;">Программа обсуждена и утвеждена <br/>на заседании Ученого совета<br/>___________<span id="year"></span>г. (Протокол №___) <br/><br/>Председатель Ученого совета <br/>__________/Имя/</span>
+                <span style="text-align: center;">Калининград<br/><span id="year">2025</span></span>
             </div>
         </div>
     </div>
@@ -94,16 +105,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Элементы формы
     const institutionSelect = document.getElementById('institution-select');
     const customInstitutionInput = document.getElementById('custom-institution');
     const customInstitutionDiv = document.getElementById('custom-institution-div');
     const institutionOutput = document.getElementById('institution-output-new');
     const programNameInput = document.getElementById('program-name');
     const programOutput = document.getElementById('program-output-new');
-    const publishButton = document.getElementById('publish-button');
+    
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Получаем данные учреждений через API
+    function updateDisplayedData() {
+        let finalInstitutionValue = '';
+
+        if (institutionSelect.value === 'other') {
+            finalInstitutionValue = customInstitutionInput.value.trim();
+        } else if (institutionSelect.value) {
+            finalInstitutionValue = institutionSelect.options[institutionSelect.selectedIndex].dataset.fullName || institutionSelect.options[institutionSelect.selectedIndex].text;
+        }
+
+        institutionOutput.textContent = finalInstitutionValue;
+        programOutput.textContent = programNameInput.value;
+    }
+
     fetch('/api/get_all_institutions')
         .then(response => response.json())
         .then(data => {
@@ -115,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 institutionSelect.appendChild(option);
             });
             
-            // Добавляем пункт "Иное" в конец списка
             const otherOption = document.createElement('option');
             otherOption.value = 'other';
             otherOption.text = 'Иное';
@@ -123,35 +145,23 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error("Ошибка загрузки данных:", error));
 
-    // Логика появления поля "Ваше учреждение" только при выборе "Иное"
     institutionSelect.addEventListener('change', () => {
         if (institutionSelect.value === 'other') {
-            customInstitutionDiv.classList.remove('hidden'); // Показываем поле
+            customInstitutionDiv.classList.remove('hidden');
+            customInstitutionInput.value = '';
         } else {
-            customInstitutionDiv.classList.add('hidden'); // Скрываем поле
+            customInstitutionDiv.classList.add('hidden');
         }
+        updateDisplayedData();
     });
 
-    function updateDataForPublish() {
-        let finalInstitutionValue;
-
-        if (institutionSelect.value === 'other') {
-            finalInstitutionValue = customInstitutionInput.value.trim();
-        } else {
-            finalInstitutionValue = institutionSelect.options[institutionSelect.selectedIndex].dataset.fullName;
-        }
-
-        institutionOutput.textContent = finalInstitutionValue;
-        programOutput.textContent = programNameInput.value;
-    }
-
-    publishButton.addEventListener('click', updateDataForPublish);
+    customInstitutionInput.addEventListener('input', updateDisplayedData);
+    programNameInput.addEventListener('input', updateDisplayedData);
 });
 
 function goToKonstruktor3Page() {
     window.location.href = "{{ url_for('konstruktor3_page') }}";
 }
 </script>
-
 </body>
 </html>

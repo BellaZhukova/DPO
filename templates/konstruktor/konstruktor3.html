@@ -35,6 +35,14 @@
             bottom: 20px;
             right: 20px;
         }
+        .developers-line {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        #authors-list {
+            display: inline;
+        }
     </style>
 </head>
 <body>
@@ -66,29 +74,29 @@
             
             <div class="inner-page">
                 <h1 id="institution-output-new"></h1>
-                <p>Разработчик(и) программы:</p>
-                <div id="authors-list">
-                    <div id="current-user-info">{{ g.user.first_name }} {{ g.user.last_name }}, {{ g.user.position }}, {{ g.user.institution }}</div>
-                    <div id="first-coauthor-info"></div>
-                    <div id="second-coauthor-info"></div>
+                <div style="white-space: wrap; display: inline-block;">
+                    <strong style="display: inline;">Разработчик(и) программы:</strong>
+                    <span id="authors-list" style="display: inline;">
+                        {{ g.user.first_name }} {{ g.user.last_name }} {{ g.user.middle_name }}, {{ g.user.position }}, {{ g.user.institution }}<span id="first-coauthor-info"></span><span id="second-coauthor-info"></span>
+                    </span>
                 </div>
 
-                <!-- Таблица должна находиться ВНУТРИ страницы A4 -->
+
                 <p>Дополнительная профессиональная программа повышения квалификации "<span id="program-name">Название Программы</span>", прошла экспертизу:</p>
 
                 <ul class="experts-list">
                     <li class="expert-item">
-                        Эксперт 1:<br/>
-                        <span id="expert1-info"></span>
+                        Эксперт 1:
+                        <span id="expert1-info">-</span>
                     </li>
                     <li class="expert-item">
-                        Эксперт 2:<br/>
-                        <span id="expert2-info"></span>
+                        Эксперт 2:
+                        <span id="expert2-info">-</span>
                     </li>
                 </ul>
 
                 <div class="footer-section">
-                    Дополнительная профессиональная программа повышения квалификации "<span id="program-name">Название Программы</span>" утверждена Ученым советом Калининградского областного института развития образования (протокол № ___ от ______ 2025 г.)
+                    Дополнительная профессиональная программа повышения квалификации "<span id="program-name">Название Программы</span>" утверждена Ученым советом Калининградского областного института развития образования (протокол № ___ от ______ <span id="year"></span> г.)
                 </div>
             </div>
         </div>
@@ -107,10 +115,8 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-// Глобальная переменная для хранения данных авторов
 let authorsData = [];
 
-// Функция для получения авторов с сервера
 async function getAuthors() {
     try {
         const response = await fetch('/get_authors');
@@ -123,81 +129,71 @@ async function getAuthors() {
     }
 }
 
-// Функция для заполнения выпадающих списков авторов
 function populateAuthorSelects() {
     const authorSelect = document.getElementById('author-select');
     const secondAuthorSelect = document.getElementById('second-author-select');
     
-    // Очищаем существующие опции (кроме первой)
-    while (authorSelect.options.length > 1) authorSelect.remove(1);
-    while (secondAuthorSelect.options.length > 1) secondAuthorSelect.remove(1);
+    authorSelect.innerHTML = '<option value="">Выберите автора</option>';
+    secondAuthorSelect.innerHTML = '<option value="">Выберите второго автора</option>';
     
-    // Добавляем новых авторов
+    console.log(authorsData)
     authorsData.forEach(author => {
-        const option1 = new Option(author.value, author.value);
-        const option2 = new Option(author.value, author.value);
+        const displayText = `${author.last_name} ${author.first_name} ${author.middle_name}`;
+        
+        const option1 = new Option(displayText, author.id);
+        const option2 = new Option(displayText, author.id);
         
         authorSelect.add(option1);
         secondAuthorSelect.add(option2);
     });
 }
 
-// Функция для получения полной информации об авторе по имени
-function getAuthorInfo(fullName) {
-    return authorsData.find(author => author.value === fullName)?.data || null;
+function getAuthorInfo(authorId) {
+    const author = authorsData.find(author => author.id == authorId);
+    if (!author) return null;
+    
+    return {
+        first_name: author.first_name || '',
+        last_name: author.last_name || '',
+        middle_name: author.middle_name || '',
+        position: author.position || '',
+        institution: author.institution || ''
+    };
 }
 
-// Функция для форматирования даты
-function getCurrentDate() {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    return `${day}.${month}.${year}`;
-}
+// function getCurrentDate() {
+//     const today = new Date();
+//     const day = String(today.getDate()).padStart(2, '0');
+//     const month = String(today.getMonth() + 1).padStart(2, '0');
+//     const year = today.getFullYear();
+//     return `${day}.${month}.${year}`;
+// }
 
-// Функция для обновления информации об экспертах
-function updateExpertsInfo() {
-    const firstAuthor = document.getElementById('author-select').value;
-    const secondAuthor = document.getElementById('second-author-select').value;
+document.addEventListener('DOMContentLoaded', async () => {
+    await getAuthors();
     
-    const expert1Info = document.getElementById('expert1-info');
-    const expert2Info = document.getElementById('expert2-info');
-    
-    if (firstAuthor) {
-        const authorData = getAuthorInfo(firstAuthor);
-        if (authorData) {
-            expert1Info.textContent = `${firstAuthor}, ${authorData.position}, ${authorData.institution}, дата экспертизы: ${getCurrentDate()}, подпись: ___________`;
-        }
-    }
-    
-    if (secondAuthor) {
-        const authorData = getAuthorInfo(secondAuthor);
-        if (authorData) {
-            expert2Info.textContent = `${secondAuthor}, ${authorData.position}, ${authorData.institution}, дата экспертизы: ${getCurrentDate()}, подпись: ___________`;
-        }
-    }
-}
-
-// Основная функция при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    // Загружаем авторов
-    getAuthors();
-    
-    // Назначаем обработчики событий для select элементов
     document.getElementById('author-select').addEventListener('change', function() {
-        const selectedValue = this.value;
-        document.getElementById('first-coauthor-info').textContent = selectedValue || '';
-        updateExpertsInfo();
+        const selectedId = this.value;
+        const authorInfo = getAuthorInfo(selectedId);
+        if (authorInfo) {
+            const fullInfo = `; ${authorInfo.first_name} ${authorInfo.last_name} ${authorInfo.middle_name}, ${authorInfo.position}, ${authorInfo.institution}`;
+            document.getElementById('first-coauthor-info').textContent = fullInfo;
+        } else {
+            document.getElementById('first-coauthor-info').textContent = '';
+        }
     });
-    
+
     document.getElementById('second-author-select').addEventListener('change', function() {
-        const selectedValue = this.value;
-        document.getElementById('second-coauthor-info').textContent = selectedValue || '';
-        updateExpertsInfo();
+        const selectedId = this.value;
+        const authorInfo = getAuthorInfo(selectedId);
+        if (authorInfo) {
+            const fullInfo = `; ${authorInfo.first_name} ${authorInfo.last_name} ${authorInfo.middle_name}, ${authorInfo.position}, ${authorInfo.institution}.`;
+            document.getElementById('second-coauthor-info').textContent = fullInfo;
+        } else {
+            document.getElementById('second-coauthor-info').textContent = '';
+        }
     });
     
-    // Обработчик для кнопки "Сохранить"
     document.getElementById('publish-button').addEventListener('click', async function() {
         const firstAuthor = document.getElementById('author-select').value;
         const secondAuthor = document.getElementById('second-author-select').value;
@@ -222,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Ошибка при сохранении данных');
         }
     });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
 });
 
 function goToKonstruktor4Page() {

@@ -178,17 +178,18 @@ def konstruktor3_page():
 def get_authors():
     db = get_db()
     authors = db.execute(
-        "SELECT user_id, first_name, last_name, institution, position "
+        "SELECT user_id, first_name, last_name, middle_name, institution, position "
         "FROM users WHERE role_author = TRUE"
     )
     result = []
     for author in authors.fetchall():
         result.append({
-            "value": f"{author['first_name']} {author['last_name']}",
-            "data": {
-                "institution": author['institution'],
-                "position": author['position']
-            }
+            "id": author["user_id"],
+            "first_name": author["first_name"],
+            "last_name": author["last_name"],
+            "middle_name": author["middle_name"],
+            "institution": author["institution"],
+            "position": author["position"]
         })
     return jsonify(result)
 
