@@ -391,7 +391,7 @@ def update_password():
         hashed_password = generate_password_hash(new_password)
         cursor.execute("""
             UPDATE users 
-            SET username = ?, password = ?
+            SET username = ?, password_hash = ?
             WHERE email = ?
         """, (new_login, hashed_password, email))
         db.commit()
@@ -501,7 +501,7 @@ def end_register():
         if user and user['role_author']:
             hashed_password = generate_password_hash(password)
             db.execute(
-                "UPDATE users SET username = ?, password = ? WHERE email = ?",
+                "UPDATE users SET username = ?, password_hash = ? WHERE email = ?",
                 (username, hashed_password, email)
             )
             db.commit()
@@ -547,7 +547,7 @@ def polzovateli():
             u.email,                     
             u.phone_number,            
             u.username,                 
-            u.password,             
+            u.password_hash,             
             (
                 SELECT GROUP_CONCAT(role_text, '<br />')
                 FROM (
@@ -651,7 +651,7 @@ def create_user():
     hashed_password = generate_password_hash(password)
     cursor.execute('''
         INSERT INTO users (
-            username, password, first_name, last_name, email, phone_number, institution, position, academic_degree
+            username, password_hash, first_name, last_name, email, phone_number, institution, position, academic_degree
         ) VALUES (?,?,?,?,?,?,?,?,?)
     ''', (username, hashed_password, first_name, last_name, email, phone_number, institution, position, academic_degree))
 
