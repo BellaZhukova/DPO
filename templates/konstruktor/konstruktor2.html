@@ -51,6 +51,16 @@
         .hidden {
             display: none;
         }
+
+        .page-container {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+        }
+
+        #program-output-new {
+            font-style: italic;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -124,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         institutionOutput.textContent = finalInstitutionValue;
-        programOutput.textContent = programNameInput.value;
+        programOutput.textContent = `"${programNameInput.value}"`;
     }
 
     fetch('/api/get_all_institutions')

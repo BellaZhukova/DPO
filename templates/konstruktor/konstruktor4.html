@@ -33,6 +33,49 @@
             bottom: 20px;
             right: 20px;
         }
+
+        /* Стили для контекстного меню */
+        .context-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .context-menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .page-container {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12px;
+        }
+
+        .page-title {
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -56,20 +99,19 @@
 
     <div class="page-container">
         <div class="page-a4">
-            <h4>Список сокращений и условных обозначений</h4>
+            <h4 class="page-title">Список сокращений и условных обозначений</h4>
             <table id="editableTable">
-                <thead>
-                    <tr>
-                        <th>Аббревиатура</th>
-                        <th>Полное название</th>
-                    </tr>
-                </thead>
                 <tbody>
                     
                 </tbody>
             </table>
         </div>
     </div>
+</div>
+
+<div id="contextMenu" class="context-menu">
+    <div class="context-menu-item" onclick="editSelectedRow()">Изменить</div>
+    <div class="context-menu-item" onclick="deleteSelectedRow()">Удалить</div>
 </div>
 
 <!-- Кнопка "Назад" -->
@@ -83,90 +125,79 @@
 </div>
 
 <script>
- function addAbbreviation() {
-    const abbreviation = document.getElementById('abbreviation-input').value;
-    const fullname = document.getElementById('fullname-input').value;
-    
-    if (abbreviation && fullname) {
-        const tableBody = document.querySelector('#editableTable tbody');
-        
-        const newRow = document.createElement('tr');
-        
-        const abbreviationCell = document.createElement('td');
-        abbreviationCell.textContent = abbreviation;
-        
-        const fullnameCell = document.createElement('td');
-        fullnameCell.textContent = fullname;
-        
+    let selectedRow = null;
+    let contextMenu = document.getElementById('contextMenu');
 
-        newRow.appendChild(abbreviationCell);
-        newRow.appendChild(fullnameCell);
+    document.addEventListener('click', function(e) {
+        if (e.target !== contextMenu && !contextMenu.contains(e.target)) {
+            contextMenu.style.display = 'none';
+        }
+    });
+
+    document.querySelector('#editableTable tbody').addEventListener('contextmenu', function(e) {
+        if (e.target.tagName === 'TD') {
+            e.preventDefault();
+            selectedRow = e.target.parentElement;
+            
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = e.pageX + 'px';
+            contextMenu.style.top = e.pageY + 'px';
+        }
+    });
+
+    function addAbbreviation() {
+        const abbreviation = document.getElementById('abbreviation-input').value;
+        const fullname = document.getElementById('fullname-input').value;
         
-        tableBody.appendChild(newRow);
-        
-        document.getElementById('abbreviation-input').value = '';
-        document.getElementById('fullname-input').value = '';
-    } else {
-        alert('Пожалуйста, заполните оба поля!');
+        if (abbreviation && fullname) {
+            const tableBody = document.querySelector('#editableTable tbody');
+            
+            const newRow = document.createElement('tr');
+            
+            const abbreviationCell = document.createElement('td');
+            abbreviationCell.textContent = abbreviation;
+            abbreviationCell.style.fontWeight = 'bold';
+            
+            const fullnameCell = document.createElement('td');
+            fullnameCell.textContent = fullname;
+            
+            newRow.appendChild(abbreviationCell);
+            newRow.appendChild(fullnameCell);
+            
+            tableBody.appendChild(newRow);
+            
+            document.getElementById('abbreviation-input').value = '';
+            document.getElementById('fullname-input').value = '';
+        } else {
+            alert('Пожалуйста, заполните оба поля!');
+        }
     }
-}
 
-//МОЖНО СДЕЛАТЬ ЗАПРОС ВОТ ТАКИМ СПОСОБОМ, и сразу же делать запрос на получение
-// async function addAbbreviation() {
-//     const abbreviation = document.getElementById('abbreviation-input').value;
-//     const fullname = document.getElementById('fullname-input').value;
+    function editSelectedRow() {
+        if (selectedRow) {
+            const cells = selectedRow.cells;
+            const abbreviation = cells[0].textContent;
+            const fullname = cells[1].textContent;
+            
+            document.getElementById('abbreviation-input').value = abbreviation;
+            document.getElementById('fullname-input').value = fullname;
+            
+            selectedRow.remove();
+            selectedRow = null;
+            contextMenu.style.display = 'none';
+        }
+    }
+
+    function deleteSelectedRow() {
+        if (selectedRow) {
+            selectedRow.remove();
+            selectedRow = null;
+            contextMenu.style.display = 'none';
+        }
+    }
     
-//     if (abbreviation && fullname) {
-//         try {
-//             // Отправляем данные на сервер
-//             const response = await fetch('/api/abbreviations', {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//                 body: JSON.stringify({
-//                     abbreviation: abbreviation,
-//                     fullname: fullname
-//                 })
-//             });
-            
-//             if (!response.ok) {
-//                 throw new Error('Ошибка при сохранении данных');
-//             }
-            
-//             const savedData = await response.json();
-            
-//             // Добавляем новую строку в таблицу
-//             const tableBody = document.querySelector('#editableTable tbody');
-            
-//             const newRow = document.createElement('tr');
-            
-//             const abbreviationCell = document.createElement('td');
-//             abbreviationCell.textContent = savedData.abbreviation;
-            
-//             const fullnameCell = document.createElement('td');
-//             fullnameCell.textContent = savedData.fullname;
-            
-//             newRow.appendChild(abbreviationCell);
-//             newRow.appendChild(fullnameCell);
-            
-//             tableBody.appendChild(newRow);
-            
-//             // Очищаем поля ввода
-//             document.getElementById('abbreviation-input').value = '';
-//             document.getElementById('fullname-input').value = '';
-            
-//         } catch (error) {
-//             console.error('Ошибка:', error);
-//             alert('Произошла ошибка при сохранении: ' + error.message);
-//         }
-//     } else {
-//         alert('Пожалуйста, заполните оба поля!');
-//     }
-// }
-    
-function goToKonstruktor5Page() {
-        window.location.href =  "{{ url_for('konstruktor5_page') }}";
+    function goToKonstruktor5Page() {
+        window.location.href = "{{ url_for('konstruktor5_page') }}";
     }
 </script>
 

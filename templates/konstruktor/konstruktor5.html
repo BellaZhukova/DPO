@@ -112,6 +112,9 @@
             margin: 0 auto; /* Центрирование по горизонтали */
             padding: 20mm; /* Рабочее пространство листа */
             box-sizing: border-box; /* Подключение внутренних полей в общую площадь */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             
         }
 
@@ -131,6 +134,38 @@
             text-align: center; /* Выравнивание текста по центру */
             font-size: 12px; /* Маленький размер шрифта */
             transform: translateY(-50%); /* Перемещает элемент вверх ровно наполовину высоты, центруя по оси Y */
+        }
+
+.page-a4 p {
+    margin: 0 0 15px 0;
+    padding: 0;
+    text-align: justify;
+    line-height: 1.5;
+    display: block; /* Убедитесь, что это block */
+}
+
+.page-a4 p b {
+    display: inline; /* Оставляем inline */
+    margin-right: 5px;
+    white-space: nowrap; /* Запрещаем перенос заголовка */
+}
+
+.page-a4 p span {
+    display: inline; /* Оставляем inline */
+    word-wrap: normal; /* Меняем на normal */
+    white-space: normal; /* Разрешаем переносы внутри текста */
+}
+
+        .page-a4 {
+            word-break: break-word;
+            hyphens: auto;
+            overflow: hidden;
+        }
+
+        .textarea-field {
+            min-height: 100px;
+            max-height: 300px;
+            white-space: pre-wrap;
         }
 
         /* Имитация страниц А4 при печати */
@@ -210,20 +245,19 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* фиксирует размеры столбцов */
+            table-layout: fixed;
         }
 
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
-            word-wrap: break-word; /* переносит длинные слова */
-            overflow: hidden; /* ограничивает содержимое внутри границ */
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
-        /* Применяем процентные соотношения для ширины столбцов */
         th:nth-child(1), td:nth-child(1) {
-            width: 40%; /* первый столбец занимает 30% */
+            width: 40%;
         }
 
         th:nth-child(2), td:nth-child(2),
@@ -231,7 +265,6 @@
             width: 30%;
         }
 
-        /* Стили выпадающего меню */
         .dropdown-menu {
             display: none;
             position: fixed;
@@ -255,7 +288,6 @@
             background-color: #f0f0f0;
         }
 
-        /* Анимация открытия меню */
         .dropdown-menu.show {
             display: block;
             animation: fadeIn 0.3s ease-in-out forwards;
@@ -271,7 +303,7 @@
         }
 
         .textarea-field {
-            width: 100%;                   /* Полностью занимают ширину сайдбара */
+            width: 100%;                   
             padding: 10px;
             border-radius: 4px;
             border: 3px solid #ccc;
@@ -284,42 +316,42 @@
             line-height: 1.5;
             margin-bottom: 20px;
             margin-top: -15px;
-            resize: vertical;              /* Возможность ручного изменения высоты */
-            height: auto;                  /* Авто-вычисление высоты */
-            min-height: 50px;              /* Минимальная высота */
-            overflow-y: auto;              /* Прокрутка при длинном тексте */
+            resize: vertical;              
+            height: auto;                  
+            min-height: 50px;              
+            overflow-y: auto;              
         }
 
         .fields-side-by-side {
-            display: flex;               /* Используем Flexbox */
-            gap: 20px;                  /* Расстояние между колонками */
+            display: flex;               
+            gap: 20px;                  
         }
 
         .side-bar-column {
-            flex: 1;                     /* Колонки равномерно делят пространство */
-            padding: 10px;               /* Внутренние отступы */
+            flex: 1;                     
+            padding: 10px;               
         }
 
-        .form-element { /* Класс применяется ко всем input и select */
-            width: 100%; /* Поле занимает всю доступную ширину контейнера */
-            padding: 10px; /* Внутренний отступ вокруг содержимого элемента */
-            border-radius: 4px; /* Закругление углов рамки элемента */
-            border: 3px solid #ccc; /* Рамка толщиной 1 пиксель серого цвета (#ccc) */
-            background-color: white; /* Белый фон внутри элемента */
-            box-sizing: border-box; /* Ширина включает внутренние отступы и рамку */
-            transition: all .3s ease; /* Плавность изменения свойств при событиях */
-            outline: none; /* Убираем внешнюю линию выделения при фокуса */
-            font-family: Arial, sans-serif; /* Шрифт используемого текста */
-            font-size: 18px; /* Размер шрифта в полях */
-            line-height: 1.5; /* Межстрочный интервал для удобочитаемости */
+        .form-element { 
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 3px solid #ccc;
+            background-color: white;
+            box-sizing: border-box;
+            transition: all .3s ease;
+            outline: none;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            line-height: 1.5;
             margin-bottom: 20px;
             margin-top: -15px;
         }
 
         .window-container {
-            display: flex; /* Размещаем окна рядом */
-            justify-content: space-between; /* Равномерно распределяем окна */
-            max-width: 100%; /* Ограничиваем максимальную ширину */
+            display: flex; 
+            justify-content: space-between;
+            max-width: 100%; 
         }
 
         .window {
@@ -385,6 +417,10 @@
             background-color: #0056b3; /* Темнее при наведении */
         }
         
+        .page-container {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -524,7 +560,9 @@
     
     <div class="page-container">
         <div class="page-a4">
-            <!-- Здесь будут отображаться сохранённые данные -->
+            <h4>ПОЯСНИТЕЛЬНАЯ ЗАПИСКА</h4>
+            <p><b>Актуальность разработки программы:</b> <span id="relevance"></span></p>
+            <p><b>Цель реализации программы:</b> <span id="purpose"></span></p>
         </div>
     </div>
 </div>
@@ -535,6 +573,17 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    $(document).ready(function() {
+        // Обновление текста актуальности в реальном времени
+        $('#relevance-textarea').on('input', function() {
+            $('#relevance').text($(this).val());
+        });
+
+        $('#goal-textarea').on('input', function() {
+            $('#purpose').text($(this).val());
+        });
+    });
+
     document.addEventListener("DOMContentLoaded", function() {
         const relevanceInput = document.getElementById("relevance-input");
         const goalInput = document.getElementById("goal-input");
