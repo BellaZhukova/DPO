@@ -173,14 +173,15 @@ def konstruktor0_page():
     db = get_db()
     cursor = db.cursor()
 
-    # SQL-запрос с объединением таблиц
+    # SQL-запрос с левым внешним соединением
     cursor.execute('''
           SELECT 
-              p.program_id, pp2.program_name, p.current_version, s.status_name, 
+              p.program_id, COALESCE(pp2.program_name, 'Без названия') AS program_name, 
+              p.current_version, s.status_name, 
               u.first_name || ' ' || u.last_name AS main_author, 
               p.created_at, p.sent_to_expertise_at
           FROM programs p
-          JOIN program_pages2 pp2 ON p.program_id = pp2.program_id
+          LEFT JOIN program_pages2 pp2 ON p.program_id = pp2.program_id
           JOIN Status s ON p.status_id = s.Status_id
           JOIN users u ON p.main_author_id = u.user_id
           WHERE p.main_author_id = ?
@@ -203,6 +204,7 @@ def konstruktor0_page():
         for row in programs
     ]
 
+
     # Передаем данные в шаблон
     return render_template('konstruktor/konstruktor0.html', programs=programs_list)
 
@@ -210,6 +212,7 @@ def konstruktor0_page():
 @app.route('/konstruktor2')
 def konstruktor2_page():
     return render_template('konstruktor/konstruktor2.html')
+
 
 @app.route('/konstruktor3')
 def konstruktor3_page():
@@ -978,6 +981,35 @@ def remove_education_form(form_id):
     conn.commit()
     conn.close()
     return jsonify({'message': 'Форма обучения удалена.'}), 200
+
+@app.route('/create-program', methods=['POST'])
+def create_program():
+    # Получаем идентификатор текущего пользователя из сессии
+    user_id = session.get('user_id')
+    if not user_id:
+        return "Ошибка: пользователь не авторизован."
+
+    # Устанавливаем соединение с базой данных
+    db = get_db()
+    cursor = db.cursor()
+
+    # Вставляем новую запись в таблицу programs
+    cursor.execute('''
+        INSERT INTO programs (status_id,sent_to_expertise_at ,main_author_id)
+        VALUES (1,NULL,?)
+    ''', (user_id,))
+
+    # Получаем последний вставленный идентификатор программы
+    program_id = cursor.lastrowid
+
+    # Сохраняем идентификатор программы в переменную session
+    session['program_num'] = program_id
+
+    # Коммитим изменения в базу данных
+    db.commit()
+
+    # Перенаправляем пользователя на страницу konstruktor2
+    return redirect(url_for('konstruktor2_page'))
 
 if __name__ == '__main__':
     app.run(debug=True)

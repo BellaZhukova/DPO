@@ -49,10 +49,50 @@
             background-color: #73b2ec;
             cursor: pointer;
         }
+
+        /* Кнопка "Создать программу" */
+        .create-program-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Кнопки "Продолжить редактирование" и "Скачать" */
+        .action-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+                /* Кнопка "Назад" */
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background-color: #DC3545; /* Цвет фона красный */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
     <div class="window">
+         <button class="back-btn" onclick="goBack()">Назад</button>
+        <button class="create-program-btn" onclick="goToCreateProgram()">Создать программу</button>
         <h1>Мои программы</h1>
         <table>
             <thead>
@@ -64,6 +104,7 @@
                     <th>Главный автор</th>
                     <th>Дата создания</th>
                     <th>Дата отправки на экспертизу</th>
+                    <th>Действие</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,10 +117,43 @@
                     <td>{{ program.main_author }}</td>
                     <td>{{ program.created_at }}</td>
                     <td>{{ program.sent_to_expertise_at }}</td>
+                    <td>
+                        {% if program.status_name == "В разработке" %}
+                            <button class="action-btn" onclick="continueEditing({{ program.program_id }})">Продолжить редактирование</button>
+                        {% elif program.status_name == "На экспертизе" %}
+                            <button class="action-btn" onclick="downloadProgram({{ program.program_id }})">Скачать</button>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </body>
+<script>
+       function goBack() {
+        window.location.href = "/vhod-vibor";
+    }
+    function goToCreateProgram() {
+          // При нажатии на кнопку делаем POST-запрос для создания программы
+        fetch("/create-program", {
+            method: "POST",
+            credentials: "include"  // Необходимо для передачи cookie и сессии
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = "/konstruktor2";
+            } else {
+                alert("Ошибка при создании программы.");
+            }
+        });;
+    }
+
+    function continueEditing() {
+        window.location.href = "/konstruktor2";
+    }
+
+    function downloadProgram(programId) {
+        window.location.href = "/download/" + programId;
+    }
+</script>
 </html>
