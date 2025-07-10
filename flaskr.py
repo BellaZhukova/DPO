@@ -164,7 +164,47 @@ def ixpertiza2_page():
 
 @app.route('/konstruktor0')
 def konstruktor0_page():
-    return render_template('konstruktor/konstruktor0.html')
+    # Получаем идентификатор текущего пользователя из сессии
+    user_id = session.get('user_id')
+    if not user_id:
+        return "Ошибка: пользователь не авторизован."
+
+    # Устанавливаем соединение с базой данных
+    db = get_db()
+    cursor = db.cursor()
+
+    # SQL-запрос с объединением таблиц
+    cursor.execute('''
+          SELECT 
+              p.program_id, pp2.program_name, p.current_version, s.status_name, 
+              u.first_name || ' ' || u.last_name AS main_author, 
+              p.created_at, p.sent_to_expertise_at
+          FROM programs p
+          JOIN program_pages2 pp2 ON p.program_id = pp2.program_id
+          JOIN Status s ON p.status_id = s.Status_id
+          JOIN users u ON p.main_author_id = u.user_id
+          WHERE p.main_author_id = ?
+      ''', (user_id,))
+
+    # Получаем все найденные программы
+    programs = cursor.fetchall()
+
+    # Формируем список объектов для передачи в шаблон
+    programs_list = [
+        {
+            "program_id": row["program_id"],
+            "program_name": row["program_name"],
+            "current_version": row["current_version"],
+            "status_name": row["status_name"],
+            "main_author": row["main_author"],
+            "created_at": row["created_at"],
+            "sent_to_expertise_at": row["sent_to_expertise_at"]
+        }
+        for row in programs
+    ]
+
+    # Передаем данные в шаблон
+    return render_template('konstruktor/konstruktor0.html', programs=programs_list)
 
 
 @app.route('/konstruktor2')
