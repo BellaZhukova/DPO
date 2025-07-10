@@ -136,25 +136,6 @@
             transform: translateY(-50%); /* Перемещает элемент вверх ровно наполовину высоты, центруя по оси Y */
         }
 
-.page-a4 p {
-    margin: 0 0 15px 0;
-    padding: 0;
-    text-align: justify;
-    line-height: 1.5;
-    display: block; /* Убедитесь, что это block */
-}
-
-.page-a4 p b {
-    display: inline; /* Оставляем inline */
-    margin-right: 5px;
-    white-space: nowrap; /* Запрещаем перенос заголовка */
-}
-
-.page-a4 p span {
-    display: inline; /* Оставляем inline */
-    word-wrap: normal; /* Меняем на normal */
-    white-space: normal; /* Разрешаем переносы внутри текста */
-}
 
         .page-a4 {
             word-break: break-word;
@@ -561,8 +542,13 @@
     <div class="page-container">
         <div class="page-a4">
             <h4>ПОЯСНИТЕЛЬНАЯ ЗАПИСКА</h4>
-            <p><b>Актуальность разработки программы:</b> <span id="relevance"></span></p>
-            <p><b>Цель реализации программы:</b> <span id="purpose"></span></p>
+            <div style="white-space: normal; display: inline-block; max-width: 100%;">
+                <p style="display: inline; overflow-wrap: break-word;"><b>Актуальность разработки программы:</b> <span id="relevance"></span></p>
+            </div>
+            <div style="white-space: normal; display: inline-block; max-width: 100%;">
+                <p style="display: inline; overflow-wrap: break-word;"><b>Цель реализации программы:</b> <span id="purpose"></span></p>
+            </div>
+            
         </div>
     </div>
 </div>
@@ -574,7 +560,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Обновление текста актуальности в реальном времени
         $('#relevance-textarea').on('input', function() {
             $('#relevance').text($(this).val());
         });
@@ -614,14 +599,11 @@
             }
         });
 
-        // Функция для формирования итогового документа
         function generateDocument() {
             let outputHTML = "";
 
-            // Добавляем актуальность
             outputHTML += `<strong>Актуальность разработки программы:</strong> ${relevanceInput.value}<br>`;
 
-            // Добавляем цель
             outputHTML += `<strong>Цель реализации программы:</strong> ${goalInput.value}<br>`;
 
             // Добавляем профессиональные стандарты или ЕКС
